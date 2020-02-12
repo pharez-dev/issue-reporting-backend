@@ -3,26 +3,18 @@ const router = require("express").Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const passport = require("passport");
-const uniqid = require("uniqid");
 const User = mongoose.model("Users");
-
-const GuestUser = mongoose.model("GuestUsers");
-const path = require("path");
-
-/**
- *Endpoint for loging in, requires checking if user is active ...*
- **/
 router.post("/login", (req, res, next) => {
   const { body } = req;
-
-  let phoneNumber = body.phoneNumber;
+  console.log(body);
+  let email = body.email;
   let password = body.password;
 
-  User.findOne({ phoneNumber }).then(user => {
+  User.findOne({ email }).then(user => {
     if (!user) {
       return res.status(200).json({
         success: false,
-        message: "Incorrect phoneNumber or --password!"
+        message: "Incorrect email or --password!"
       });
     }
     bcrypt.compare(password, user.password).then(isMatch => {
@@ -66,43 +58,6 @@ router.post("/login", (req, res, next) => {
   });
 });
 
-/**
- *Endpoint for loging in, requires checking if user is active ...*
- **/
-router.post("/loginGuest", (req, res, next) => {
-  const { body } = req;
-  console.log(body);
-  if (!body.deviceId)
-    return res
-      .status(200)
-      .json({ success: false, message: "Failed to continue as guest" });
-  GuestUser.findOne({ deviceId: body.deviceId })
-    .then(found => {
-      if (found) {
-        //    console.log("found guest", found);
-      }
-      return found;
-    })
-    .then(async found => {
-      let guestUser = found;
-      if (!found) {
-        guestname = "Guest_" + uniqid.time().substring(4, 8);
-        console.log(guestname);
-        guestUser = await GuestUser.create({
-          guestname: guestname,
-          deviceId: body.deviceId
-        });
-      }
-
-      console.log("Guest user", guestUser);
-      return res.json({
-        success: true,
-
-        guestUser,
-        message: "You have successfully logged in"
-      });
-    });
-});
 router.post("/register", (req, res, next) => {
   const { body } = req;
   console.log("[register body]", body);
@@ -180,6 +135,18 @@ router.post("/register", (req, res, next) => {
   });
 });
 
+/**
+ *Endpoint for checking token ...*
+ **/
+router.post(
+  "/checkToken",
+  passport.authenticate("jwt", { session: false }),
+  (req, res, next) => {
+    const { body } = req;
+    res.json({});
+  }
+);
+
 const parseUser = user => {
   if (user.role == "admin") {
     delete user.students;
@@ -191,4 +158,5 @@ const parseUser = user => {
   delete user.__v;
   return user;
 };
+
 module.exports = router;

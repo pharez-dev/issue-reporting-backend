@@ -25,17 +25,12 @@ const UsersSchema = new Schema(
     DOB: {
       type: Date
     },
-    phone_number: {
-      main: {
-        type: String
-      },
-      alt: {
-        type: String
-      }
+    phoneNumber: {
+      type: String
     },
     salutation: {
       type: String,
-      enum: ["mr", "mrs", "miss", "dr", "prof", "other", "approval-denied"],
+      enum: ["mr", "mrs", "miss", "dr", "prof", "other"],
       default: "other"
     },
     idNumber: {
@@ -53,42 +48,17 @@ const UsersSchema = new Schema(
     },
     reset: { type: Object },
 
-    isSetUp: {
+    isVerified: {
       type: Boolean,
       default: false
-    },
-    addedBy: {
-      type: Schema.ObjectId,
-      ref: "Users"
-    },
-    // added:
-    // 	[
-    // 	{
-    // 		type:Schema.ObjectId,
-    // 		ref:'UsersSchema'
-    // 	}
-    // 	]
-    // ,
-    //Required for manager
-    manager_type: {
-      type: String,
-      enum: ["Chair", "Treasurer", "Secretary"]
     },
 
     //role for all other users of the system. required
     role: {
       type: String,
-      enum: [
-        "parent",
-        "instructor",
-        "trainer",
-        "chief-trainer",
-        "admin",
-        "manager",
-        "contact-person"
-      ],
+      enum: ["admin", "mobile-client"],
 
-      required: true
+      default: "mobile-client"
     },
     //Both county and sub count must be known for all users
     county: {
@@ -96,48 +66,6 @@ const UsersSchema = new Schema(
     },
     sub_county: {
       type: String
-    },
-
-    //Required for chief trainer
-    trainers: [
-      {
-        type: Schema.ObjectId,
-        ref: "Users"
-      }
-    ],
-
-    instructors: [
-      {
-        type: Schema.ObjectId,
-        ref: "Users" //required for trainers
-      }
-    ],
-
-    courses: [
-      {
-        type: Schema.ObjectId,
-        ref: "Courses" //required for trainers
-      }
-    ],
-
-    school: {
-      type: Schema.ObjectId,
-      ref: "Schools" //required for trainer and instructor
-    },
-
-    students: [
-      {
-        type: Schema.ObjectId,
-        ref: "Students" //Required for parent and instructor
-      }
-    ],
-
-    trainerId: {
-      type: Schema.ObjectId,
-      ref: "Users" //required for instructor
-    },
-    residence: {
-      type: String //required for parent
     }
   },
   { timestamps: true }
@@ -155,15 +83,9 @@ UsersSchema.methods.toJSON = function() {
     role: this.role,
     status: this.status,
     password: this.password,
-    trainers: this.trainers,
-    instructors: this.instructors,
-    courses: this.courses,
-    school: this.school,
-    students: this.students,
-    residence: this.residence,
+
     county: this.county,
     sub_county: this.sub_county,
-    trainerId: this.trainerId,
 
     reset: this.reset,
     interests: this.interests,
