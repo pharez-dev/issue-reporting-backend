@@ -54,6 +54,7 @@ const passport = require("passport");
 
 require("./models/Users");
 require("./models/GuestUsers");
+require("./models/Counties");
 
 //mongoose models
 

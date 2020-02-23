@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const passport = require("passport");
 const uniqid = require("uniqid");
 const User = mongoose.model("Users");
-
+const County = mongoose.model("Counties");
 const GuestUser = mongoose.model("GuestUsers");
 const path = require("path");
 
@@ -43,7 +43,7 @@ router.post("/login", (req, res, next) => {
           payload,
           "secret",
           {
-            expiresIn: 60 * 30
+            expiresIn: 60 * 30 * 100000
           },
           (err, token) => {
             if (err) console.error("There is some error in token", err);
@@ -179,6 +179,36 @@ router.post("/register", (req, res, next) => {
     }
   });
 });
+/**
+ *Endpoint for subcounties ...*
+ **/
+router.post(
+  "/subcounties",
+  passport.authenticate("jwt", { session: false }),
+  (req, res, next) => {
+    const { body } = req;
+    console.log("body", body);
+    let name;
+    if (body.county.indexOf("County") > -1) {
+      name = body.county.slice(0, body.county.indexOf("County") - 1);
+    }
+    console.log(name);
+    County.findOne({ name })
+      .then(county => {
+        console.log("found", county);
+        res.json({
+          success: true,
+          county
+        });
+      })
+      .catch(err => {
+        res.json({
+          success: false,
+          message: "Failed to get sub counties!"
+        });
+      });
+  }
+);
 
 const parseUser = user => {
   if (user.role == "admin") {
