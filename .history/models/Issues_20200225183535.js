@@ -23,7 +23,6 @@ IssueSchema.methods.toJSON = function() {
     userId: this.userId,
     reportId: this.reportId,
     county: this.county,
-    sub_county: this.sub_county,
     type: this.type,
     locationInfo: this.locationInfo,
     description: this.description,

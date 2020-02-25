@@ -26,7 +26,7 @@ const server = http.createServer(app);
 const io = socketIO(server);
 
 const PORT = process.env.PORT || 8081;
-const IP = process.env.IP || process.env.OPENSHIFT_NODEJS_IP || "localhost";
+const IP = process.env.IP || process.env.OPENSHIFT_NODEJS_IP || "192.168.100.4";
 // set the view engine to ejs
 app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
@@ -41,7 +41,7 @@ app.use(
 app.use(require("morgan")("dev"));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use("/public/uploads", express.static(__dirname + "/public/uploads"));
+app.use(express.static(__dirname + "/public"));
 app.use(
   session({
     secret: "LightBlog",

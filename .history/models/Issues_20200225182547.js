@@ -17,13 +17,12 @@ const IssueSchema = new Schema(
   { timestamps: true }
 );
 
-IssueSchema.methods.toJSON = function() {
+IssueSchema.methods.toJSON = () => {
   return {
     _id: this._id,
     userId: this.userId,
     reportId: this.reportId,
-    county: this.county,
-    sub_county: this.sub_county,
+    county: this.sub_county,
     type: this.type,
     locationInfo: this.locationInfo,
     description: this.description,

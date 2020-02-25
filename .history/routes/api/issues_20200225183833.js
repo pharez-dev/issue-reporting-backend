@@ -72,8 +72,8 @@ router.post(
             });
         });
       }).then(data => {
-        console.log("[data]", data);
-        return;
+        //console.log("[data]", data);
+        // return;
         let type = null;
         switch (data.issueType) {
           case "Water  and sanitation":
