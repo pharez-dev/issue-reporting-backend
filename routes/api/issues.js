@@ -73,7 +73,7 @@ router.post(
         });
       }).then(data => {
         console.log("[data]", data);
-        return;
+
         let type = null;
         switch (data.issueType) {
           case "Water  and sanitation":
@@ -126,10 +126,12 @@ router.post(
 router.post("/all", (req, res, next) => {
   const { body } = req;
   console.log("[body]", body);
-  Issue.find({}).then(issues => {
-    //  issues = { ...issues._doc };
-    // console.log("[issues]", issues);
-    res.json({ success: true, issues: issues });
-  });
+  Issue.find({})
+    .limit(13)
+    .then(issues => {
+      //  issues = { ...issues._doc };
+      // console.log("[issues]", issues);
+      res.json({ success: true, issues: issues });
+    });
 });
 module.exports = router;
