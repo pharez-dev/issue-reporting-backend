@@ -10,6 +10,7 @@ const IssueSchema = new Schema(
     reportId: { type: String },
     sub_county: { type: String },
     type: { type: String },
+    status: { type: String, enum: ["pending", "resolved"], default: "pending" },
     images: { type: Array },
     locationInfo: { type: Object },
     description: { type: Object }
