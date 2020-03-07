@@ -10,7 +10,8 @@ const GuestUsersSchema = new Schema(
     },
     guestname: {
       type: String
-    }
+    },
+    pushToken: { type: String }
   },
   { timestamps: true }
 );
@@ -20,7 +21,7 @@ GuestUsersSchema.methods.toJSON = function() {
     _id: this._id,
     deviceId: this.deviceId,
     guestname: this.guestname,
-
+    pushToken: this.pushToken,
     interests: this.interests,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt

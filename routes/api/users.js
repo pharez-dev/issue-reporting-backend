@@ -14,7 +14,9 @@ const path = require("path");
  **/
 router.post("/login", (req, res, next) => {
   const { body } = req;
-  console.log("[ua]", req.ua.browser);
+  const { pushToken } = body;
+
+  console.log("[body]", body);
 
   let phoneNumber = body.phoneNumber;
   let password = body.password;
@@ -26,7 +28,7 @@ router.post("/login", (req, res, next) => {
         message: "Incorrect phoneNumber or --password!"
       });
     }
-    bcrypt.compare(password, user.password).then(isMatch => {
+    bcrypt.compare(password, user.password).then(async isMatch => {
       if (isMatch) {
         if (user.status == "pending-approval")
           return res.status(200).json({
@@ -39,7 +41,10 @@ router.post("/login", (req, res, next) => {
             .status(200)
             .json({ success: false, message: "Your account was suspended!" });
         const payload = parseUser(user._doc);
-
+        if (pushToken) {
+          console.log("storing pT");
+          await storePT(pushToken, "guest", user._id);
+        }
         jwt.sign(
           payload,
           "secret",
@@ -104,7 +109,7 @@ router.post("/loginGuest", (req, res, next) => {
       });
     });
 });
-router.post("/register", (req, res, next) => {
+router.post("/register", async (req, res, next) => {
   const { body } = req;
   console.log("[register body]", body);
 
@@ -221,5 +226,20 @@ const parseUser = user => {
   delete user.password;
   delete user.__v;
   return user;
+};
+const storePT = async (token, type, _id) => {
+  return new Promise((resolve, reject) => {
+    if (_id == null) reject("id cannot be null");
+    if (token == null) reject("token cannot be null");
+    User.findByIdAndUpdate(_id, { pushToken: token })
+      .then(doc => {
+        console.log("[pt]", doc);
+        resolve();
+      })
+      .catch(err => {
+        console.log(err);
+        reject();
+      });
+  });
 };
 module.exports = router;
