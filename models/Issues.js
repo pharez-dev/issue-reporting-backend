@@ -26,6 +26,7 @@ IssueSchema.methods.toJSON = function() {
     county: this.county,
     sub_county: this.sub_county,
     type: this.type,
+    status: this.status,
     locationInfo: this.locationInfo,
     description: this.description,
     images: this.images,

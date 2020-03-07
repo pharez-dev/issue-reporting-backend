@@ -25,7 +25,7 @@ router.post(
     const { user } = req;
     const options = {
       multiples: true,
-      maxFileSize: 1024 * 1024 * 10
+      maxFileSize: 1024 * 1024 * 100
     };
 
     const form = formidable(options);
@@ -35,9 +35,10 @@ router.post(
       let issueDetails = {};
       let images = [];
       form.on("error", err => {
+        console.log(err.message);
         return res
           .status(200)
-          .json({ message: "An error occuredc in processing your request" });
+          .json({ message: "An error occured in processing your request" });
       });
       form.on("fileBegin", (filename, file) => {
         // let img = uniqid("image_") + path.extname(file.name);
@@ -127,7 +128,8 @@ router.post("/all", (req, res, next) => {
   const { body } = req;
   console.log("[body]", body);
   Issue.find({})
-    .limit(13)
+    .limit(100)
+    .sort({ createdAt: -1 })
     .then(issues => {
       //  issues = { ...issues._doc };
       // console.log("[issues]", issues);
