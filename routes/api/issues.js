@@ -4,6 +4,7 @@ const uniqid = require("uniqid");
 const jwt = require("jsonwebtoken");
 const passport = require("passport");
 const User = mongoose.model("Users");
+const Notification = mongoose.model("Notifications");
 const Issue = mongoose.model("Issues");
 const cloudinary = require("cloudinary");
 const { Expo } = require("expo-server-sdk");
@@ -119,6 +120,12 @@ router.post(
           .save()
           .then(newIssue => {
             //console.log(newIssue);
+            req.io.to("admin").emit("notification2", {
+              title: `${req.user.fname} has just reported a  new issue has just been reported`,
+              description: new Date(),
+              type: "new-report",
+              createdAt: new Date()
+            });
             res.status(200).json({ success: true, issue: newIssue });
           })
           .catch(err => {

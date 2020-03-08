@@ -66,6 +66,7 @@ require("./models/Users");
 require("./models/GuestUsers");
 require("./models/Counties");
 require("./models/Issues");
+require("./models/Notifications");
 
 //mongoose models
 
