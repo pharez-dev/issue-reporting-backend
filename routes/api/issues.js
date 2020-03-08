@@ -130,23 +130,69 @@ router.post(
 );
 router.post("/all", (req, res, next) => {
   const { body } = req;
-  console.log("[body]", body);
-  Issue.find({})
-    .limit(100)
-    .sort({ createdAt: -1 })
-    .then(issues => {
-      //  issues = { ...issues._doc };
-      // console.log("[issues]", issues);
-      res.json({ success: true, issues: issues });
-    });
+  //console.log("[body of all ]", body);
+  let search = {};
+  let filter = {};
+  let sort = { createdAt: -1 };
+  //Sorting
+  if (body.sortField) {
+    sort = { [body.sortField]: body.sortOrder == "ascend" ? 1 : -1 };
+  }
+  //console.log(Object.keys(body));
+  //filtering
+  let or = [];
+  for (let key of Object.keys(body)) {
+    if (key.includes("[]")) {
+      field = key.substring(0, key.indexOf("["));
+      values = body[key];
+      if (Array.isArray(values)) {
+        values = {
+          $in: values
+        };
+      }
+      or.push({ [field]: values });
+    }
+  }
+
+  if (or.length > 0) {
+    filter = {
+      $or: or
+    };
+  }
+  // console.log("[filter]", filter);
+  //Searching
+  if (body.query) {
+    body.query = kebab(body.query);
+    ft = {
+      $or: [
+        { type: { $regex: body.query, $options: "i" } },
+        { county: { $regex: body.query, $options: "i" } },
+
+        { sub_county: { $regex: body.query, $options: "i" } }
+      ]
+    };
+  }
+  let aggregate = Issue.aggregate()
+    .match({
+      $and: [search, filter]
+    })
+    .sort(sort);
+  Issue.aggregatePaginate(aggregate, {
+    page: body.page,
+    limit: body.limit
+  }).then(results => {
+    const data = [...results.docs];
+    results.docs = data.length;
+    res.json({ success: true, issues: data, meta: results });
+  });
 });
 const sendNotification = messages => {
-  messages.push({
-    to: "ExponentPushToken[20Op7YOrhkk5t5EKNUO827]",
-    sound: "default",
-    body: "Hello again Pharez !",
-    channelId: "issue-reports"
-  });
+  //   messages.push({
+  //     to: "ExponentPushToken[20Op7YOrhkk5t5EKNUO827]",
+  //     sound: "default",
+  //     body: "Hello again Pharez, Your issue server just woke up !!!",
+  //     channelId: "issue-reports"
+  //   });
   let chunks = expo.chunkPushNotifications(messages);
   let tickets = [];
   (async () => {
@@ -210,4 +256,14 @@ const sendNotification = messages => {
   })();
 };
 sendNotification([]);
+kebab = string => {
+  if (string) {
+    string = string
+      .replace(/([a-z])([A-Z])/g, "$1-$2")
+      .replace(/\s+/g, "-")
+      .toLowerCase();
+  }
+
+  return string;
+};
 module.exports = router;

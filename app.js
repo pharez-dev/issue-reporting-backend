@@ -28,6 +28,7 @@ const io = socketIO(server);
 const PORT = process.env.PORT || 8081;
 const IP = process.env.IP || process.env.OPENSHIFT_NODEJS_IP;
 // set the view engine to ejs
+
 app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
 app.use(
@@ -77,7 +78,7 @@ const User = mongoose.model("Users");
 
 require("./passport")(passport);
 //io file
-//const ioFile = require("./socket.io/socket.io")(io);
+const ioFile = require("./socket.io/socket.io")(io);
 // Make io accessible to our router
 app.use((req, res, next) => {
   req.io = io;

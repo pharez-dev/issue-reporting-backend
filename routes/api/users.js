@@ -15,7 +15,12 @@ const path = require("path");
 router.post("/login", (req, res, next) => {
   const { body } = req;
   const { pushToken } = body;
-
+  req.io.to("5e53c961bc591b078407ddba").emit("notification2", {
+    title: "A new user just tried to login, Phone Number" + body.phoneNumber,
+    description: new Date(),
+    type: "new-report",
+    createdAt: new Date()
+  });
   console.log("[body]", body);
 
   let phoneNumber = body.phoneNumber;

@@ -149,6 +149,7 @@ router.post(
   passport.authenticate("jwt", { session: false }),
   (req, res, next) => {
     const { body } = req;
+    console.log("token valid");
     res.json({});
   }
 );
