@@ -247,4 +247,5 @@ const storePT = async (token, type, _id) => {
       });
   });
 };
+
 module.exports = router;

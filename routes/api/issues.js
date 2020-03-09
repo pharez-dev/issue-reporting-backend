@@ -131,7 +131,7 @@ router.post(
               initiator: req.user._id
             });
             req.io.to("admin").emit("notification2", {
-              title: `${req.user.fname} has just reported a  new issue has just been reported`,
+              title: `${req.user.fname} has just reported a  new issue.`,
               description: newIssue.description,
               type: "new-report",
               createdAt: new Date()
@@ -202,6 +202,23 @@ router.post("/all", (req, res, next) => {
     results.docs = data.length;
     res.json({ success: true, issues: data, meta: results });
   });
+});
+router.post("/single", (req, res, next) => {
+  const { body } = req;
+
+  Issue.findById(body.record)
+    .then(async issue => {
+      let user = await User.findById(issue.userId);
+      issue._doc.reportedBy = parseUser(user._doc);
+      return issue;
+    })
+    .then(issue => {
+      console.log(issue);
+      res.json({ success: true, data: issue });
+    })
+    .catch(err => {
+      console.log(err);
+    });
 });
 const sendNotification = messages => {
   //   messages.push({
@@ -282,5 +299,18 @@ kebab = string => {
   }
 
   return string;
+};
+
+const parseUser = user => {
+  if (user.role == "admin") {
+    delete user.students;
+    delete user.trainers;
+    delete user.instructors;
+    delete user.courses;
+  }
+  delete pushToken;
+  delete user.password;
+  delete user.__v;
+  return user;
 };
 module.exports = router;

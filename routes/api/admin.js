@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const passport = require("passport");
 const User = mongoose.model("Users");
+const Notification = mongoose.model("Notifications");
 router.post("/login", (req, res, next) => {
   const { body } = req;
   console.log(body);
@@ -154,6 +155,23 @@ router.post(
   }
 );
 
+router.post(
+  "/notifications",
+  passport.authenticate("jwt", { session: false }),
+  (req, res, next) => {
+    const { body } = req;
+    const { user } = req;
+    Notification.find({ to: user.role })
+      .sort({ createdAt: -1 })
+      .then(data => {
+        res.json({ success: true, data });
+      })
+      .catch(err => {
+        console.log(err);
+        res.json({ success: false, message: err.message });
+      });
+  }
+);
 const parseUser = user => {
   if (user.role == "admin") {
     delete user.students;

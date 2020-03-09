@@ -24,7 +24,7 @@ const NotificationsSchema = new Schema(
 
     opened: {
       type: Boolean, // for io,
-      default: true
+      default: false
     },
     doc: { type: Object },
     initiator: { type: Schema.Types.ObjectId, ref: "Users" }
