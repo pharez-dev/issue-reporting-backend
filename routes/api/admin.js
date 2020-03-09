@@ -9,7 +9,7 @@ router.post("/login", (req, res, next) => {
   console.log(body);
   let email = body.email;
   let password = body.password;
-
+  let remember = body.remember;
   User.findOne({ email }).then(user => {
     if (!user) {
       return res.status(200).json({
@@ -41,7 +41,7 @@ router.post("/login", (req, res, next) => {
           payload,
           "secret",
           {
-            expiresIn: 60 * 30
+            expiresIn: body.remember ? "365d" : 60 * 30
           },
           (err, token) => {
             if (err) console.error("There is some error in token", err);

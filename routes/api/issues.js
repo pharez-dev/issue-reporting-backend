@@ -118,11 +118,21 @@ router.post(
           userId: user._id
         })
           .save()
-          .then(newIssue => {
+          .then(async newIssue => {
             //console.log(newIssue);
+            await Notification.create({
+              title: `${req.user.fname} has just reported a  new issue.`,
+              type: "new-report",
+              body: newIssue.description,
+              doc: newIssue,
+              createdAt: new Date(),
+              channel: "io",
+              to: "admin",
+              initiator: req.user._id
+            });
             req.io.to("admin").emit("notification2", {
               title: `${req.user.fname} has just reported a  new issue has just been reported`,
-              description: new Date(),
+              description: newIssue.description,
               type: "new-report",
               createdAt: new Date()
             });

@@ -21,9 +21,12 @@ const NotificationsSchema = new Schema(
       type: String,
       enum: ["io", "push"]
     },
+
     opened: {
-      type: Boolean // for io
+      type: Boolean, // for io,
+      default: true
     },
+    doc: { type: Object },
     initiator: { type: Schema.Types.ObjectId, ref: "Users" }
   },
   { timestamps: true }
@@ -37,6 +40,7 @@ NotificationsSchema.methods.toJSON = function() {
     type: this.type,
     to: this.to,
     channel: this.channel,
+    doc: this.doc,
     opened: this.opened,
     initiator: this.initiator,
     createdAt: this.createdAt,
