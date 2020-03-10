@@ -7,6 +7,7 @@ const uniqid = require("uniqid");
 const User = mongoose.model("Users");
 const County = mongoose.model("Counties");
 const GuestUser = mongoose.model("GuestUsers");
+const Issue = mongoose.model("Issues");
 const path = require("path");
 
 /**
@@ -46,6 +47,7 @@ router.post("/login", (req, res, next) => {
             .status(200)
             .json({ success: false, message: "Your account was suspended!" });
         const payload = parseUser(user._doc);
+
         if (pushToken) {
           console.log("storing pT");
           await storePT(pushToken, "guest", user._id);
@@ -117,7 +119,7 @@ router.post("/loginGuest", (req, res, next) => {
 router.post("/register", async (req, res, next) => {
   const { body } = req;
   console.log("[register body]", body);
-
+  const { pushToken } = body;
   User.findOne({
     phoneNumber: body.phoneNumber
   }).then(user => {
@@ -150,24 +152,22 @@ router.post("/register", async (req, res, next) => {
                 if (err) console.error("There was an error", err);
                 else {
                   newUser.password = hash;
-                  newUser.save().then(user => {
-                    user = user.toObject();
-                    delete user.password;
-                    const payload = {
-                      id: user._id,
-                      fname: user.fname,
-                      lname: user.lname,
+                  newUser.save().then(async user => {
+                    // user = user.toObject();
 
-                      email: user.email,
-                      isVerified: user.isVerified
-                    };
+                    const payload = parseUser(user._doc);
+                    if (pushToken) {
+                      console.log("storing pT");
+                      await storePT(pushToken, null, user._id);
+                    }
                     jwt.sign(
                       payload,
                       "secret",
                       {
-                        expiresIn: "365d"
+                        expiresIn: 60 * 30 * 100000
                       },
                       (err, token) => {
+                        console.log("token", token);
                         if (err)
                           console.error("There is some error in token", err);
                         else {
@@ -199,14 +199,15 @@ router.post(
   (req, res, next) => {
     const { body } = req;
     console.log("body", body);
-    let name;
+    let name = body.county;
     if (body.county.indexOf("County") > -1) {
       name = body.county.slice(0, body.county.indexOf("County") - 1);
     }
     console.log(name);
-    County.findOne({ name })
+    County.findOne({ name: { $regex: kebab(name), $options: "i" } })
       .then(county => {
         console.log("found", county);
+        if (county == null) county = { sub_counties: [] };
         res.json({
           success: true,
           county
@@ -220,7 +221,71 @@ router.post(
       });
   }
 );
+/**
+ *Endpoint for fetching issues user reported ...*
+ **/
+router.post(
+  "/allIssues",
+  passport.authenticate("jwt", { session: false }),
+  (req, res, next) => {
+    const { body } = req;
+    //console.log("[body of all ]", body);
+    let search = {};
+    let filter = {};
+    let sort = { createdAt: -1 };
+    //Sorting
+    if (body.sortField) {
+      sort = { [body.sortField]: body.sortOrder == "ascend" ? 1 : -1 };
+    }
+    //console.log(Object.keys(body));
+    //filtering
+    let or = [];
+    for (let key of Object.keys(body)) {
+      if (key.includes("[]")) {
+        field = key.substring(0, key.indexOf("["));
+        values = body[key];
+        if (Array.isArray(values)) {
+          values = {
+            $in: values
+          };
+        }
+        or.push({ [field]: values });
+      }
+    }
 
+    if (or.length > 0) {
+      filter = {
+        $or: or
+      };
+    }
+    // console.log("[filter]", filter);
+    //Searching
+    if (body.query) {
+      body.query = kebab(body.query);
+      ft = {
+        $or: [
+          { type: { $regex: body.query, $options: "i" } },
+          { county: { $regex: body.query, $options: "i" } },
+
+          { sub_county: { $regex: body.query, $options: "i" } }
+        ]
+      };
+    }
+    let aggregate = Issue.aggregate()
+      .match({
+        $and: [search, filter, { userId: req.user._id }]
+      })
+      .sort(sort);
+    Issue.aggregatePaginate(aggregate, {
+      page: body.page,
+      limit: body.limit
+    }).then(results => {
+      const data = [...results.docs];
+      results.docs = data.length;
+      res.json({ success: true, issues: data, meta: results });
+    });
+  }
+);
 const parseUser = user => {
   if (user.role == "admin") {
     delete user.students;
@@ -238,7 +303,7 @@ const storePT = async (token, type, _id) => {
     if (token == null) reject("token cannot be null");
     User.findByIdAndUpdate(_id, { pushToken: token })
       .then(doc => {
-        console.log("[pt]", doc);
+        //  console.log("[pt]", doc);
         resolve();
       })
       .catch(err => {
@@ -246,6 +311,17 @@ const storePT = async (token, type, _id) => {
         reject();
       });
   });
+};
+
+kebab = string => {
+  if (string) {
+    string = string
+      .replace(/([a-z])([A-Z])/g, "$1-$2")
+      .replace(/\s+/g, "-")
+      .toLowerCase();
+  }
+
+  return string;
 };
 
 module.exports = router;

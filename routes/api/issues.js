@@ -233,7 +233,7 @@ router.post("/single", (req, res, next) => {
         });
         return each;
       });
-      console.log(newIss);
+      // console.log(newIss);
       //  console.log(issue._doc.reportedBy);
       res.json({
         success: true,

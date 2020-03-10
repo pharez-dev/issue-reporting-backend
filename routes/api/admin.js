@@ -219,7 +219,7 @@ router.post(
               });
               return each;
             });
-            console.log(newIss);
+            //  console.log(newIss);
             res.json({ success: true, issue: newIss });
           })
           .catch(err => {
