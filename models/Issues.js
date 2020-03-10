@@ -6,14 +6,35 @@ const { Schema } = mongoose;
 const IssueSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: "Users" },
-    county: { type: String },
-    reportId: { type: String },
-    sub_county: { type: String },
-    type: { type: String },
-    status: { type: String, enum: ["pending", "resolved"], default: "pending" },
+    county: { type: String, trim: true },
+    reportId: { type: String, trim: true },
+    sub_county: { type: String, trim: true },
+    type: { type: String, trim: true },
+    status: {
+      type: String,
+      enum: ["pending", "resolved", "closed", "reviewed"],
+      default: "pending",
+      trim: true
+    },
     images: { type: Array },
     locationInfo: { type: Object },
-    description: { type: Object }
+    description: { type: Object },
+    notify: {
+      type: Boolean,
+      default: true
+    },
+    response: [
+      {
+        by: { type: Schema.Types.ObjectId, ref: "Users" },
+        message: { type: String, trim: true },
+        statusTo: {
+          type: String,
+          trim: true,
+          enum: ["resolved", "closed", "reviewed"]
+        },
+        time: Date
+      }
+    ]
   },
   { timestamps: true }
 );

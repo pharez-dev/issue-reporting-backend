@@ -14,6 +14,7 @@ module.exports = passport => {
         .then(user => {
           if (user) {
             //console.log(user)
+
             console.log("Authenticated req from " + user.fname);
             return done(null, user);
           }

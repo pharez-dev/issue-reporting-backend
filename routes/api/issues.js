@@ -112,6 +112,7 @@ router.post(
           county: data.locationInfo.address.region,
           sub_county: data.sub_county,
           type: data.issueType,
+          notify: data.notify,
           locationInfo: data.locationInfo,
           description: data.description,
           images: data.images,
@@ -212,9 +213,33 @@ router.post("/single", (req, res, next) => {
       issue._doc.reportedBy = parseUser(user._doc);
       return issue;
     })
-    .then(issue => {
-      console.log(issue);
-      res.json({ success: true, data: issue });
+
+    .then(async issue => {
+      //fetch responders
+      let responders = issue.response.map(each => {
+        return mongoose.Types.ObjectId(each.by);
+      });
+      responders = await User.find({ _id: { $in: responders } });
+      let newIss = Object.assign({}, issue._doc);
+
+      newIss.response = newIss.response.map((each, i) => {
+        let response = Object.assign({}, each._doc);
+        //  console.log(response);
+        responders.map(user => {
+          let by = parseUser(Object.assign({}, user._doc));
+          //console.log(by);
+          // if(by._id==each.by)
+          each = { ...each._doc, by };
+        });
+        return each;
+      });
+      console.log(newIss);
+      //  console.log(issue._doc.reportedBy);
+      res.json({
+        success: true,
+        data: newIss,
+        reportedBy: issue._doc.reportedBy
+      });
     })
     .catch(err => {
       console.log(err);

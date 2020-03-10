@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const passport = require("passport");
 const User = mongoose.model("Users");
+const Issue = mongoose.model("Issues");
 const Notification = mongoose.model("Notifications");
 router.post("/login", (req, res, next) => {
   const { body } = req;
@@ -154,7 +155,9 @@ router.post(
     res.json({});
   }
 );
-
+/**
+ *Endpoint for fetching notifications ...*
+ **/
 router.post(
   "/notifications",
   passport.authenticate("jwt", { session: false }),
@@ -165,6 +168,65 @@ router.post(
       .sort({ createdAt: -1 })
       .then(data => {
         res.json({ success: true, data });
+      })
+      .catch(err => {
+        console.log(err);
+        res.json({ success: false, message: err.message });
+      });
+  }
+);
+/**
+ *Endpoint for updating issue ...*
+ **/
+router.post(
+  "/update_issue",
+  passport.authenticate("jwt", { session: false }),
+  (req, res, next) => {
+    const { body } = req;
+    const { user } = req;
+    console.log(body);
+    Issue.findById(body._id)
+
+      .then(issue => {
+        issue.status = body["radio-button"];
+        issue.response.push({
+          by: req.user._id,
+          message: body.message,
+          statusTo: body["radio-button"],
+          time: new Date()
+        });
+        return issue
+          .save()
+          .then(async newIssue => {
+            return newIssue;
+          })
+          .then(async issue => {
+            //fetch responders
+            let responders = issue.response.map(each => {
+              return mongoose.Types.ObjectId(each.by);
+            });
+            responders = await User.find({ _id: { $in: responders } });
+            let newIss = Object.assign({}, issue._doc);
+
+            newIss.response = newIss.response.map((each, i) => {
+              let response = Object.assign({}, each._doc);
+              //  console.log(response);
+              responders.map(user => {
+                let by = parseUser(Object.assign({}, user._doc));
+                //console.log(by);
+                // if(by._id==each.by)
+                each = { ...each._doc, by };
+              });
+              return each;
+            });
+            console.log(newIss);
+            res.json({ success: true, issue: newIss });
+          })
+          .catch(err => {
+            console.log(err);
+            res.json({ success: false, message: err.message });
+          });
+        // res.json({ success: true, data });
       })
       .catch(err => {
         console.log(err);
