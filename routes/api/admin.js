@@ -176,6 +176,47 @@ router.post(
   }
 );
 /**
+ *Endpoint for fetching notifications ...*
+ **/
+router.post(
+  "/header_notifications",
+  passport.authenticate("jwt", { session: false }),
+  (req, res, next) => {
+    const { body } = req;
+    const { user } = req;
+    Notification.find({ to: user.role, opened: false })
+      .sort({ createdAt: -1 })
+      .then(data => {
+        res.json({ success: true, data });
+      })
+      .catch(err => {
+        console.log(err);
+        res.json({ success: false, message: err.message });
+      });
+  }
+);
+/**
+ *Endpoint for updating  notifications ...*
+ **/
+router.post(
+  "/update_notifications",
+  passport.authenticate("jwt", { session: false }),
+  (req, res, next) => {
+    const { body } = req;
+    const { user } = req;
+    console.log("[body]", body);
+    // Notification.find({ to: user.role, opened: false })
+    //   .sort({ createdAt: -1 })
+    //   .then(data => {
+    //     res.json({ success: true, data });
+    //   })
+    //   .catch(err => {
+    //     console.log(err);
+    //     res.json({ success: false, message: err.message });
+    //   });
+  }
+);
+/**
  *Endpoint for updating issue ...*
  **/
 router.post(

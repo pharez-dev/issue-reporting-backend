@@ -206,7 +206,7 @@ router.post("/all", (req, res, next) => {
 });
 router.post("/single", (req, res, next) => {
   const { body } = req;
-
+  console.log(body);
   Issue.findById(body.record)
     .then(async issue => {
       let user = await User.findById(issue.userId);
@@ -243,6 +243,7 @@ router.post("/single", (req, res, next) => {
     })
     .catch(err => {
       console.log(err);
+      res.json({ success: false, message: err.message });
     });
 });
 const sendNotification = messages => {
