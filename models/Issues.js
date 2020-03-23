@@ -18,7 +18,8 @@ const IssueSchema = new Schema(
     },
     images: { type: Array },
     locationInfo: { type: Object },
-    description: { type: Object },
+    description: { type: String, trim: true },
+    proposedSolution: { type: String, trim: true },
     notify: {
       type: Boolean,
       default: true

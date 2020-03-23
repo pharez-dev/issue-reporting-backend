@@ -204,9 +204,9 @@ router.post(
       name = body.county.slice(0, body.county.indexOf("County") - 1);
     }
     console.log(name);
-    County.findOne({ name: { $regex: kebab(name), $options: "i" } })
+    County.findOne({ name: { $regex: name, $options: "i" } })
       .then(county => {
-        console.log("found", county);
+        // console.log("found", county);
         if (county == null) county = { sub_counties: [] };
         res.json({
           success: true,
@@ -279,11 +279,25 @@ router.post(
     Issue.aggregatePaginate(aggregate, {
       page: body.page,
       limit: body.limit
-    }).then(results => {
-      const data = [...results.docs];
-      results.docs = data.length;
-      res.json({ success: true, issues: data, meta: results });
-    });
+    })
+      .then(results => {
+        let data = [...results.docs];
+        data = data.map(each => {
+          each.images = each.images.map(image => {
+            image = image.replace("/upload/", "/upload/h_360,q_auto,f_auto/");
+            return image;
+          });
+
+          return each;
+        });
+        //console.log(data);
+        results.docs = data.length;
+        res.json({ success: true, issues: data, meta: results });
+      })
+      .catch(err => {
+        console.log(err);
+        res.json({ success: false, message: err.message });
+      });
   }
 );
 const parseUser = user => {

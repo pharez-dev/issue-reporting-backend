@@ -115,6 +115,7 @@ router.post(
           notify: data.notify,
           locationInfo: data.locationInfo,
           description: data.description,
+          proposedSolution: data.proposedSolution,
           images: data.images,
           userId: user._id
         })
@@ -146,6 +147,7 @@ router.post(
     });
   }
 );
+//Fetch all issues
 router.post("/all", (req, res, next) => {
   const { body } = req;
   //console.log("[body of all ]", body);
@@ -204,6 +206,7 @@ router.post("/all", (req, res, next) => {
     res.json({ success: true, issues: data, meta: results });
   });
 });
+//Fetch a single issue
 router.post("/single", (req, res, next) => {
   const { body } = req;
   console.log(body);
