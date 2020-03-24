@@ -12,7 +12,14 @@ const IssueSchema = new Schema(
     type: { type: String, trim: true },
     status: {
       type: String,
-      enum: ["pending", "resolved", "closed", "reviewed"],
+      enum: [
+        "pending", // Before review
+        "planned",
+        "escalated",
+        "in progress", //Seen by county official
+        "resolved",
+        "closed"
+      ],
       default: "pending",
       trim: true
     },
@@ -35,7 +42,12 @@ const IssueSchema = new Schema(
         },
         time: Date
       }
-    ]
+    ],
+    closed: {
+      by: { type: Schema.Types.ObjectId, ref: "Users" },
+      reason: { type: String, trim: true },
+      time: Date
+    }
   },
   { timestamps: true }
 );

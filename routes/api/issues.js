@@ -12,7 +12,8 @@ const formidable = require("formidable"),
   fs = require("fs"),
   path = require("path"),
   moment = require("moment");
-
+request = require("request");
+rp = require("request-promise");
 // Create a new Expo SDK client
 let expo = new Expo();
 //cloudinary config
@@ -238,10 +239,45 @@ router.post("/single", (req, res, next) => {
       });
       // console.log(newIss);
       //  console.log(issue._doc.reportedBy);
+      return { data: newIss, reportedBy: issue._doc.reportedBy };
+    })
+    .then(async ({ data, reportedBy }) => {
+      let county = data.county;
+      county = county.slice(0, county.indexOf("County") - 1).replace(" ", "+");
+      const options = {
+        method: "GET",
+        uri: `https://frozen-basin-45055.herokuapp.com/api/wards?county=${county}`,
+        json: true
+      };
+      let wards = await rp(options)
+        .then(function(wards) {
+          let sub_county = data.sub_county;
+          if (sub_county.indexOf("Sub County") > -1)
+            sub_county = sub_county.slice(
+              0,
+              sub_county.indexOf("Sub County") - 1
+            );
+          if (sub_county.indexOf(".") > -1)
+            sub_county = sub_county.slice(0, sub_county.indexOf("."));
+          console.log(wards.length, sub_county);
+          return (wards = wards.filter(ward => {
+            // console.log(ward.constituency, "vs", sub_county);
+            return ward.constituency == sub_county;
+          }));
+        })
+        .catch(function(err) {
+          console.log(err);
+          res.json({ success: false, message: err.message });
+        });
+      request(options, function(error, response) {
+        if (error) throw new Error(error);
+      });
+
       res.json({
         success: true,
-        data: newIss,
-        reportedBy: issue._doc.reportedBy
+        data,
+        reportedBy,
+        wards
       });
     })
     .catch(err => {
@@ -249,6 +285,7 @@ router.post("/single", (req, res, next) => {
       res.json({ success: false, message: err.message });
     });
 });
+
 const sendNotification = messages => {
   //   messages.push({
   //     to: "ExponentPushToken[20Op7YOrhkk5t5EKNUO827]",

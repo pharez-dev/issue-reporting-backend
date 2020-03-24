@@ -1,3 +1,7 @@
 tasks:
   - init: npm install
     command: npm install -g nodemon
+
+vscode:
+  extensions:
+    - akamud.vscode-theme-onedark@2.2.0:3wc7n9AuVh+jHNk3a6s3tQ==
