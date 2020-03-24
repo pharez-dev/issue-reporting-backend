@@ -83,7 +83,7 @@ router.post(
 
         let type = null;
         switch (data.issueType) {
-          case "Water  and sanitation":
+          case "Water and sanitation":
             type = "WS/";
             break;
           case "Road and transport":
@@ -107,7 +107,7 @@ router.post(
           "/" +
           moment(new Date()).format("MM") +
           "/" +
-          uniqid.time();
+          uniqid.time().toUpperCase();
         new Issue({
           reportId,
           county: data.locationInfo.address.region,

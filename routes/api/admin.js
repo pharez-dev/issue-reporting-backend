@@ -278,56 +278,63 @@ router.post(
 /**
  *Endpoint for acting on is issue ...*
  **/
-router.post("/issue_action", async (req, res, next) => {
-  const { body } = req;
-  console.log(body);
-  try {
-    let issue = await Issue.findOne({ _id: body.record });
-    // console.log(issue);
-    switch (body.action) {
-      case "respond":
-        //Notify client and add to response array
-        issue.status = body["radio-button"];
-        issue.response.push({
-          by: req.user._id,
-          message: body.message,
-          statusTo: body["radio-button"],
-          time: new Date()
-        });
-        break;
-      case "escalate":
-        //Notify and assign to ward / admnistrator
-        break;
-      case "close":
-        //Notify user
-        break;
-    }
-    issue = await issue.save();
-    /**
-     * fetch responders
-     *  */
-    let responders = issue.response.map(each => {
-      return mongoose.Types.ObjectId(each.by);
-    });
-    responders = await User.find({ _id: { $in: responders } });
-    let newIss = Object.assign({}, issue._doc);
-    newIss.response = newIss.response.map((each, i) => {
-      let response = Object.assign({}, each._doc);
-      //  console.log(response);
-      responders.map(user => {
-        let by = parseUser(Object.assign({}, user._doc));
-        //console.log(by);
-        // if(by._id==each.by)
-        each = { ...each._doc, by };
+router.post(
+  "/issue_action",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { body } = req;
+    console.log(body);
+    try {
+      let issue = await Issue.findOne({ _id: body.record });
+      // console.log(issue);
+      switch (body.action) {
+        case "respond":
+          console.log("responding");
+          //Notify client and add to response array
+          issue.status = body["radio-button"];
+          issue.response.push({
+            by: req.user._id,
+            message: body.message,
+            statusTo: body["radio-button"],
+            time: new Date()
+          });
+          break;
+        case "escalate":
+          //Notify and assign to ward / admnistrator
+          break;
+        case "close":
+          //Notify user
+          break;
+      }
+      issue = await issue.save();
+      console.log("{new issue}", issue);
+      /**
+       * fetch responders
+       *  */
+      let responders = issue.response.map(each => {
+        return mongoose.Types.ObjectId(each.by);
       });
-      return each;
-    });
-    console.log(newIss);
-    res.json({ success: true, issue: newIss });
-  } catch (err) {
-    res.json({ success: false, message: err.message });
+      responders = await User.find({ _id: { $in: responders } });
+      let newIss = Object.assign({}, issue._doc);
+      newIss.response = newIss.response.map((each, i) => {
+        let response = Object.assign({}, each._doc);
+        //  console.log(response);
+        responders.map(user => {
+          let by = parseUser(Object.assign({}, user._doc));
+          //console.log(by);
+          // if(by._id==each.by)
+          each = { ...each._doc, by };
+        });
+        return each;
+      });
+      console.log(newIss);
+      res.json({ success: true, issue: newIss });
+    } catch (err) {
+      console.log(err);
+      res.json({ success: false, message: err.message });
+    }
   }
-});
+);
 
 const parseUser = user => {
   if (user.role == "admin") {

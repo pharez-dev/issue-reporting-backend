@@ -38,7 +38,13 @@ const IssueSchema = new Schema(
         statusTo: {
           type: String,
           trim: true,
-          enum: ["resolved", "closed", "reviewed"]
+          enum: [
+            "planned",
+            "escalated",
+            "in progress", //Seen by county official
+            "resolved",
+            "closed"
+          ]
         },
         time: Date
       }
