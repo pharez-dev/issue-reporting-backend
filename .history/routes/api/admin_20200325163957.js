@@ -316,7 +316,6 @@ router.post(
 
           break;
         case "close":
-          issue.closed;
           //Notify user
           break;
       }

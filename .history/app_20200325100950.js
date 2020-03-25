@@ -26,7 +26,7 @@ const server = http.createServer(app);
 const io = socketIO(server);
 
 const PORT = process.env.PORT || 8081;
-const IP = process.env.IP || process.env.OPENSHIFT_NODEJS_IP || "localhost";
+const IP = process.env.IP || process.env.OPENSHIFT_NODEJS_IP;
 // set the view engine to ejs
 
 app.set("view engine", "ejs");

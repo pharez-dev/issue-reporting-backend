@@ -300,7 +300,6 @@ router.post(
           });
           break;
         case "escalate":
-          //Notify and assign to ward / admnistrator
           issue.status = "escalated";
           issue.response.push({
             by: req.user._id,
@@ -309,14 +308,10 @@ router.post(
             statusTo: "escalated",
             time: new Date()
           });
-          issue.escalated = {
-            bool: true,
-            to: [body.escalateTo]
-          };
-
+          //Notify and assign to ward / admnistrator
+          let escalate;
           break;
         case "close":
-          issue.closed;
           //Notify user
           break;
       }

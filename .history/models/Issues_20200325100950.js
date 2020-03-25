@@ -49,11 +49,6 @@ const IssueSchema = new Schema(
         time: Date
       }
     ],
-    escalated: {
-      bool: Boolean,
-      to: [{ type: String }]
-    },
-
     closed: {
       by: { type: Schema.Types.ObjectId, ref: "Users" },
       reason: { type: String, trim: true },

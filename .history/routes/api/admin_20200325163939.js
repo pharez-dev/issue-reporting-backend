@@ -311,12 +311,11 @@ router.post(
           });
           issue.escalated = {
             bool: true,
-            to: [body.escalateTo]
+            to: [{ type: String }]
           };
 
           break;
         case "close":
-          issue.closed;
           //Notify user
           break;
       }
