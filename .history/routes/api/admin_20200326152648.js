@@ -367,9 +367,7 @@ router.post(
 router.post(
   "/allUsers",
   passport.authenticate("jwt", { session: false }),
-  async (req, res, next) => {
-    res.json({ success: false });
-  }
+  async (req, res, next) => {}
 );
 const parseUser = user => {
   if (user.role == "admin") {

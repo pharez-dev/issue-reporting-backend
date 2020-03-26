@@ -149,76 +149,72 @@ router.post(
   }
 );
 //Fetch all issues
-router.post(
-  "/all",
-  passport.authenticate("jwt", { session: false }),
-  (req, res, next) => {
-    const { body } = req;
-    console.log("[body of all ]", body);
-    let search = {};
-    let filter = {};
-    let sort = { createdAt: -1 };
-    //Sorting
-    if (body.sortField) {
-      sort = { [body.sortField]: body.sortOrder == "ascend" ? 1 : -1 };
-    }
-    //console.log(Object.keys(body));
-    //filtering
-    let or = [];
-    for (let key of Object.keys(body)) {
-      if (key.includes("[]")) {
-        field = key.substring(0, key.indexOf("["));
-        values = body[key];
-        if (Array.isArray(values)) {
-          values = {
-            $in: values
-          };
-        }
-        or.push({ [field]: values });
-      }
-    }
-
-    if (or.length > 0) {
-      filter = {
-        $or: or
-      };
-    }
-    if (or.length > 1) {
-      filter = { $and: or };
-      //console.log("[fil]", fil);
-      // filter = {
-      //   $or:and
-      // }
-    }
-    console.log("[filter]", filter);
-    //  if(filter['$or'])
-    //Searching
-    if (body.query) {
-      body.query = kebab(body.query);
-      ft = {
-        $or: [
-          { type: { $regex: body.query, $options: "i" } },
-          { county: { $regex: body.query, $options: "i" } },
-
-          { sub_county: { $regex: body.query, $options: "i" } }
-        ]
-      };
-    }
-    let aggregate = Issue.aggregate()
-      .match({
-        $and: [search, filter]
-      })
-      .sort(sort);
-    Issue.aggregatePaginate(aggregate, {
-      page: body.page,
-      limit: body.limit
-    }).then(results => {
-      const data = [...results.docs];
-      results.docs = data.length;
-      res.json({ success: true, issues: data, meta: results });
-    });
+router.post("/all", (req, res, next) => {
+  const { body } = req;
+  console.log("[body of all ]", body);
+  let search = {};
+  let filter = {};
+  let sort = { createdAt: -1 };
+  //Sorting
+  if (body.sortField) {
+    sort = { [body.sortField]: body.sortOrder == "ascend" ? 1 : -1 };
   }
-);
+  //console.log(Object.keys(body));
+  //filtering
+  let or = [];
+  for (let key of Object.keys(body)) {
+    if (key.includes("[]")) {
+      field = key.substring(0, key.indexOf("["));
+      values = body[key];
+      if (Array.isArray(values)) {
+        values = {
+          $in: values
+        };
+      }
+      or.push({ [field]: values });
+    }
+  }
+
+  if (or.length > 0) {
+    filter = {
+      $or: or
+    };
+  }
+  if (or.length > 1) {
+    let fil = { $and: or };
+    console.log(fils);
+    // filter = {
+    //   $or:and
+    // }
+  }
+  console.log("[filter]", filter["$or"]);
+  //  if(filter['$or'])
+  //Searching
+  if (body.query) {
+    body.query = kebab(body.query);
+    ft = {
+      $or: [
+        { type: { $regex: body.query, $options: "i" } },
+        { county: { $regex: body.query, $options: "i" } },
+
+        { sub_county: { $regex: body.query, $options: "i" } }
+      ]
+    };
+  }
+  let aggregate = Issue.aggregate()
+    .match({
+      $and: [search, filter]
+    })
+    .sort(sort);
+  Issue.aggregatePaginate(aggregate, {
+    page: body.page,
+    limit: body.limit
+  }).then(results => {
+    const data = [...results.docs];
+    results.docs = data.length;
+    res.json({ success: true, issues: data, meta: results });
+  });
+});
 //Fetch a single issue
 router.post("/single", (req, res, next) => {
   const { body } = req;

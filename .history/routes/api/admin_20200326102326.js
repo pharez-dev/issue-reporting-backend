@@ -316,7 +316,7 @@ router.post(
 
           break;
         case "close":
-          issue.status = "closed";
+          issue.status = "escalated";
           issue.response.push({
             by: req.user._id,
 
@@ -361,16 +361,7 @@ router.post(
     }
   }
 );
-/**
- *Endpoint for fetching all users ...*
- **/
-router.post(
-  "/allUsers",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res, next) => {
-    res.json({ success: false });
-  }
-);
+
 const parseUser = user => {
   if (user.role == "admin") {
     delete user.students;
