@@ -480,7 +480,7 @@ router.post(
     console.log("[wards body]", body);
     try {
       let county = body.county;
-      county = county.replace(" ", "+");
+      county = county.slice(0, county.indexOf("County") - 1).replace(" ", "+");
       console.log(county);
       const options = {
         method: "GET",
@@ -502,25 +502,7 @@ router.post(
           return ward.constituency == sub_county;
         }));
       });
-      res.json({ success: true, wards: wards });
-    } catch (err) {
-      res.json({ success: false, message: err.message });
-    }
-  }
-);
-/**
- *Endpoint for single user...*
- **/
-router.post(
-  "/single_user",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res, next) => {
-    const { body } = req;
-    console.log(" body]", body);
-    try {
-      let user = await User.findOne({ _id: body.record }, { password: 0 });
-
-      res.json({ success: true, data: user });
+      console.log(wards);
     } catch (err) {
       res.json({ success: false, message: err.message });
     }

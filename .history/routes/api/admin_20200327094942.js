@@ -6,7 +6,6 @@ const passport = require("passport");
 const User = mongoose.model("Users");
 const Issue = mongoose.model("Issues");
 const Notification = mongoose.model("Notifications");
-const County = mongoose.model("Counties");
 router.post("/login", (req, res, next) => {
   const { body } = req;
   console.log(body);
@@ -422,14 +421,7 @@ router.post(
     }
     let aggregate = User.aggregate()
       .match({ $and: [search, filter] })
-      .project({
-        email: 1,
-        phoneNumber: 1,
-        role: 1,
-        status: 1,
-        createdAt: 1,
-        name: { $concat: ["$fname", " ", "$lname"] }
-      })
+      .project({ email: 1, name: { $concat: ["$fname", " ", "$lname"] } })
       .sort(sort);
     User.aggregatePaginate(aggregate, {
       page: body.page,
@@ -443,87 +435,6 @@ router.post(
       .catch(err => {
         res.json({ success: false, message: err.message });
       });
-  }
-);
-/**
- *Endpoint for fetching sub counties...*
- **/
-router.post(
-  "/loadCounties",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res, next) => {
-    County.find({})
-      .then(counties => {
-        // console.log("found", county);
-
-        res.json({
-          success: true,
-          counties
-        });
-      })
-      .catch(err => {
-        res.json({
-          success: false,
-          message: "Failed to get counties!"
-        });
-      });
-  }
-);
-/**
- *Endpoint for fetching wards...*
- **/
-router.post(
-  "/loadWards",
-  // passport.authenticate("jwt", { session: false }),
-  async (req, res, next) => {
-    const { body } = req;
-    console.log("[wards body]", body);
-    try {
-      let county = body.county;
-      county = county.replace(" ", "+");
-      console.log(county);
-      const options = {
-        method: "GET",
-        uri: `https://frozen-basin-45055.herokuapp.com/api/wards?county=${county}`,
-        json: true
-      };
-      let wards = await rp(options).then(function(wards) {
-        let sub_county = body.sub_county;
-        if (sub_county.indexOf("Sub County") > -1)
-          sub_county = sub_county.slice(
-            0,
-            sub_county.indexOf("Sub County") - 1
-          );
-        if (sub_county.indexOf(".") > -1)
-          sub_county = sub_county.slice(0, sub_county.indexOf("."));
-        console.log(wards.length, sub_county);
-        return (wards = wards.filter(ward => {
-          //    console.log(ward.constituency, "vs", sub_county);
-          return ward.constituency == sub_county;
-        }));
-      });
-      res.json({ success: true, wards: wards });
-    } catch (err) {
-      res.json({ success: false, message: err.message });
-    }
-  }
-);
-/**
- *Endpoint for single user...*
- **/
-router.post(
-  "/single_user",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res, next) => {
-    const { body } = req;
-    console.log(" body]", body);
-    try {
-      let user = await User.findOne({ _id: body.record }, { password: 0 });
-
-      res.json({ success: true, data: user });
-    } catch (err) {
-      res.json({ success: false, message: err.message });
-    }
   }
 );
 const parseUser = user => {

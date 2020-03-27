@@ -11,25 +11,18 @@ const useragent = require("express-useragent");
 
 mongoose.promise = global.Promise;
 mongoose.set("useCreateIndex", true);
-const connectDB = async () => {
-  try {
-    mongoose
-      .connect(
-        "mongodb+srv://system:hello123@cluster0-flpph.mongodb.net/issueReporting?retryWrites=true",
-        { useNewUrlParser: true, useUnifiedTopology: true }
-      )
-      .catch(err => {
-        console.log("[Mongo Connect Err] Retrying in 10s...");
-        setTimeout(() => {
-          connectDB();
-        }, 10000);
-      });
-  } catch (err) {
-    console.log("[Mongo Connect Err] Retrying in 10s...");
-    setTimeout(() => {
-      connectDB();
-    }, 10000);
-  }
+const connectDB = () => {
+  mongoose
+    .connect(
+      "mongodb+srv://system:hello123@cluster0-flpph.mongodb.net/issueReporting?retryWrites=true",
+      { useNewUrlParser: true, useUnifiedTopology: true }
+    )
+    .catch(err => {
+      console.log("[Mongo Connect Err] Retrying in 10s...");
+      setTimeout(() => {
+        connectDB();
+      }, 10000);
+    });
 };
 connectDB();
 const isProduction = process.env.NODE_ENV === "production";

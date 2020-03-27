@@ -474,56 +474,38 @@ router.post(
  **/
 router.post(
   "/loadWards",
-  // passport.authenticate("jwt", { session: false }),
+  passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
-    const { body } = req;
-    console.log("[wards body]", body);
+    const { body } =req;
     try {
-      let county = body.county;
-      county = county.replace(" ", "+");
-      console.log(county);
+ 
+    let county = data.county;
+      county = county.slice(0, county.indexOf("County") - 1).replace(" ", "+");
       const options = {
         method: "GET",
         uri: `https://frozen-basin-45055.herokuapp.com/api/wards?county=${county}`,
         json: true
       };
-      let wards = await rp(options).then(function(wards) {
-        let sub_county = body.sub_county;
-        if (sub_county.indexOf("Sub County") > -1)
-          sub_county = sub_county.slice(
-            0,
-            sub_county.indexOf("Sub County") - 1
-          );
-        if (sub_county.indexOf(".") > -1)
-          sub_county = sub_county.slice(0, sub_county.indexOf("."));
-        console.log(wards.length, sub_county);
-        return (wards = wards.filter(ward => {
-          //    console.log(ward.constituency, "vs", sub_county);
-          return ward.constituency == sub_county;
-        }));
-      });
-      res.json({ success: true, wards: wards });
-    } catch (err) {
-      res.json({ success: false, message: err.message });
-    }
-  }
-);
-/**
- *Endpoint for single user...*
- **/
-router.post(
-  "/single_user",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res, next) => {
-    const { body } = req;
-    console.log(" body]", body);
-    try {
-      let user = await User.findOne({ _id: body.record }, { password: 0 });
+      let wards = await rp(options)
+        .then(function(wards) {
+          let sub_county = data.sub_county;
+          if (sub_county.indexOf("Sub County") > -1)
+            sub_county = sub_county.slice(
+              0,
+              sub_county.indexOf("Sub County") - 1
+            );
+          if (sub_county.indexOf(".") > -1)
+            sub_county = sub_county.slice(0, sub_county.indexOf("."));
+          console.log(wards.length, sub_county);
+          return (wards = wards.filter(ward => {
+            // console.log(ward.constituency, "vs", sub_county);
+            return ward.constituency == sub_county;
+          }));
+        }
+        );
 
-      res.json({ success: true, data: user });
-    } catch (err) {
-      res.json({ success: false, message: err.message });
-    }
+          catch (err) {
+          }
   }
 );
 const parseUser = user => {

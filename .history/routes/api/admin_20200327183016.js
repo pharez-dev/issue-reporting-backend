@@ -518,7 +518,7 @@ router.post(
     const { body } = req;
     console.log(" body]", body);
     try {
-      let user = await User.findOne({ _id: body.record }, { password: 0 });
+      let user = await User.find({ _id: body.record });
 
       res.json({ success: true, data: user });
     } catch (err) {

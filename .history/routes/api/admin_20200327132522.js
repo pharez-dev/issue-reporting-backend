@@ -502,25 +502,7 @@ router.post(
           return ward.constituency == sub_county;
         }));
       });
-      res.json({ success: true, wards: wards });
-    } catch (err) {
-      res.json({ success: false, message: err.message });
-    }
-  }
-);
-/**
- *Endpoint for single user...*
- **/
-router.post(
-  "/single_user",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res, next) => {
-    const { body } = req;
-    console.log(" body]", body);
-    try {
-      let user = await User.findOne({ _id: body.record }, { password: 0 });
-
-      res.json({ success: true, data: user });
+      res.json({ success: true, wards: ward });
     } catch (err) {
       res.json({ success: false, message: err.message });
     }

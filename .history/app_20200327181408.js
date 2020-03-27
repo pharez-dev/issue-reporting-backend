@@ -8,30 +8,19 @@ const cors = require("cors");
 const errorHandler = require("errorhandler");
 const mongoose = require("mongoose");
 const useragent = require("express-useragent");
-
-mongoose.promise = global.Promise;
-mongoose.set("useCreateIndex", true);
-const connectDB = async () => {
+(async function() {
   try {
-    mongoose
-      .connect(
-        "mongodb+srv://system:hello123@cluster0-flpph.mongodb.net/issueReporting?retryWrites=true",
-        { useNewUrlParser: true, useUnifiedTopology: true }
-      )
-      .catch(err => {
-        console.log("[Mongo Connect Err] Retrying in 10s...");
-        setTimeout(() => {
-          connectDB();
-        }, 10000);
-      });
-  } catch (err) {
-    console.log("[Mongo Connect Err] Retrying in 10s...");
-    setTimeout(() => {
-      connectDB();
-    }, 10000);
+    mongoose.promise = global.Promise;
+    mongoose.set("useCreateIndex", true);
+    mongoose.connect(
+      "mongodb+srv://system:hello123@cluster0-flpph.mongodb.net/issueReporting?retryWrites=true",
+      { useNewUrlParser: true, useUnifiedTopology: true }
+    );
+  } catch ("[Mongo Connect Err]",err) {
+    console.log(err);
   }
-};
-connectDB();
+  useMongoClient: true;
+})();
 const isProduction = process.env.NODE_ENV === "production";
 const app = express();
 

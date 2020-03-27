@@ -508,24 +508,6 @@ router.post(
     }
   }
 );
-/**
- *Endpoint for single user...*
- **/
-router.post(
-  "/single_user",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res, next) => {
-    const { body } = req;
-    console.log(" body]", body);
-    try {
-      let user = await User.findOne({ _id: body.record }, { password: 0 });
-
-      res.json({ success: true, data: user });
-    } catch (err) {
-      res.json({ success: false, message: err.message });
-    }
-  }
-);
 const parseUser = user => {
   if (user.role == "admin") {
     delete user.students;

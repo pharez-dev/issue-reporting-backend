@@ -474,14 +474,12 @@ router.post(
  **/
 router.post(
   "/loadWards",
-  // passport.authenticate("jwt", { session: false }),
+  passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const { body } = req;
-    console.log("[wards body]", body);
     try {
       let county = body.county;
-      county = county.replace(" ", "+");
-      console.log(county);
+      county = county.slice(0, county.indexOf("County") - 1).replace(" ", "+");
       const options = {
         method: "GET",
         uri: `https://frozen-basin-45055.herokuapp.com/api/wards?county=${county}`,
@@ -498,29 +496,11 @@ router.post(
           sub_county = sub_county.slice(0, sub_county.indexOf("."));
         console.log(wards.length, sub_county);
         return (wards = wards.filter(ward => {
-          //    console.log(ward.constituency, "vs", sub_county);
+          // console.log(ward.constituency, "vs", sub_county);
           return ward.constituency == sub_county;
         }));
       });
-      res.json({ success: true, wards: wards });
-    } catch (err) {
-      res.json({ success: false, message: err.message });
-    }
-  }
-);
-/**
- *Endpoint for single user...*
- **/
-router.post(
-  "/single_user",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res, next) => {
-    const { body } = req;
-    console.log(" body]", body);
-    try {
-      let user = await User.findOne({ _id: body.record }, { password: 0 });
-
-      res.json({ success: true, data: user });
+      console.log(wards);
     } catch (err) {
       res.json({ success: false, message: err.message });
     }
