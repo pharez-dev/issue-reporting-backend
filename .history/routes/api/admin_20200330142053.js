@@ -577,13 +577,13 @@ router.post(
         email: body.email,
         phoneNumber: body.phone,
         role: body.Role,
-        county: body.County,
+        County: body.County,
         subCounty: body.subCounty,
         password: hash
       };
-      if (body.Role == "ward-admin") newUser.ward = body.ward;
+      if (body.Role == "ward-admin") newUser = body.ward;
       let createdUser = await User.create(newUser);
-      // console.log(createdUser);
+      console.log(createdUser);
       //Send email
       let sent = await mailer({
         from: "Issue Reporting System <issuereport@yandex.com>", // sender address
@@ -598,7 +598,7 @@ router.post(
           body.email
         } </p><p> <b>Password</b>: ${password}</p>`
       });
-      //   console.log(sent);
+      console.log(sent);
       if (!sent.success) throw new Error(sent.message);
       res.json({ success: true });
     } catch (err) {

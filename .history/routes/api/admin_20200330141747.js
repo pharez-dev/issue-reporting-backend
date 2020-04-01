@@ -577,28 +577,28 @@ router.post(
         email: body.email,
         phoneNumber: body.phone,
         role: body.Role,
-        county: body.County,
+        County: body.County,
         subCounty: body.subCounty,
         password: hash
       };
-      if (body.Role == "ward-admin") newUser.ward = body.ward;
+      if (body.Role == "ward-admin") newUser = body.ward;
       let createdUser = await User.create(newUser);
-      // console.log(createdUser);
+      console.log(createdUser);
       //Send email
       let sent = await mailer({
         from: "Issue Reporting System <issuereport@yandex.com>", // sender address
         to: "kotekunra@gmail.com" + "," + body.email, // list of receivers
         subject: "Login Details ", // Subject line
         text: "Issue Reporting", // plaintext body
-        html: `<p>Hello  ${capitalize(
+        html: `<h4>Hello  ${capitalize(
           body.fname
-        )} ,</p>  You have been registered to Issue Reporting System  as  a ${capitalize(
-          body.Role
+        )} ,</h4>  You have been added to Issue Reporting System  as  ${capitalize(
+          body.role
         )} <p>Login with the following details:  <p><b>Email</b>: ${
           body.email
         } </p><p> <b>Password</b>: ${password}</p>`
       });
-      //   console.log(sent);
+      console.log(sent);
       if (!sent.success) throw new Error(sent.message);
       res.json({ success: true });
     } catch (err) {

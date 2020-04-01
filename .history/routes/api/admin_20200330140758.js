@@ -23,11 +23,7 @@ router.post("/login", (req, res, next) => {
         message: "Incorrect email or --password!"
       });
     }
-    if (
-      user.role !== "admin" &&
-      user.role !== "ward-admin" &&
-      user.role !== "sub-county-admin"
-    ) {
+    if (user.role !== "admin") {
       return res.status(200).json({
         success: false,
         message: "Incorrect email or --password!"
@@ -551,15 +547,15 @@ router.post(
       if (inUse) throw new Error("Email is already in use !");
       //Validate phone number
       if (isNaN(body.phone)) throw new Error("Invalid phone number!");
-      const options = {
-        method: "GET",
-        uri: `http://apilayer.net/api/validate? access_key=756653a2f405c7dd3283ef464aa47eeb&number=${body.phone}&country_code=KE&format=1`,
-        json: true
-      };
-      let valid = await rp(options);
-      console.log(valid);
-      if (!valid.valid) if (!valid.success) throw new Error(valid.error.info);
-      body.phone = valid.international_format;
+      // const options = {
+      //   method: "GET",
+      //   uri: `http://apilayer.net/api/validate? access_key=756653a2f405c7dd3283ef464aa47eeb&number=${body.phone}&country_code=KE&format=1`,
+      //   json: true
+      // };
+      // let valid = await rp(options);
+      // console.log(valid);
+      // if (!valid.valid) if (!valid.success) throw new Error(valid.error.info);
+      // body.phone = valid.international_format;
       //Generate password
       const password = generator.generate({
         length: 8,
@@ -575,32 +571,30 @@ router.post(
         fname: body.fname,
         lname: body.lname,
         email: body.email,
-        phoneNumber: body.phone,
+        phone: body.phone,
         role: body.Role,
-        county: body.County,
+        County: body.County,
         subCounty: body.subCounty,
         password: hash
       };
-      if (body.Role == "ward-admin") newUser.ward = body.ward;
+      if (body.Role == "ward-admin") newUser = body.ward;
       let createdUser = await User.create(newUser);
-      // console.log(createdUser);
+      console.log(createdUser);
       //Send email
       let sent = await mailer({
         from: "Issue Reporting System <issuereport@yandex.com>", // sender address
         to: "kotekunra@gmail.com" + "," + body.email, // list of receivers
         subject: "Login Details ", // Subject line
         text: "Issue Reporting", // plaintext body
-        html: `<p>Hello  ${capitalize(
+        html: `<h4>Hello  ${capitalize(
           body.fname
-        )} ,</p>  You have been registered to Issue Reporting System  as  a ${capitalize(
-          body.Role
+        )} ,</h4>  You have been added to Issue Reporting System  as  ${capitalize(
+          body.role
         )} <p>Login with the following details:  <p><b>Email</b>: ${
           body.email
-        } </p><p> <b>Password</b>: ${password}</p>`
+        } </p><p> <b>Password</b>: ${password}+</p>`
       });
-      //   console.log(sent);
       if (!sent.success) throw new Error(sent.message);
-      res.json({ success: true });
     } catch (err) {
       //
       res.json({ success: false, message: err.message });
@@ -619,7 +613,7 @@ const mailer = Options => {
   return new Promise((resolve, reject) => {
     transporter
       .sendMail(Options)
-      .then(res => resolve({ success: true }))
+      .then(res => resolve({ succes: true }))
       .catch(err => {
         reject({ success: false, message: err.message });
       });

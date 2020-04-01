@@ -90,8 +90,8 @@ UsersSchema.methods.toJSON = function() {
     password: this.password,
     pushToken: this.pushToken,
     county: this.county,
-    subCounty: this.subCounty,
-    ward: this.ward,
+    sub_county: this.sub_county,
+
     reset: this.reset,
     interests: this.interests,
     createdAt: this.createdAt,

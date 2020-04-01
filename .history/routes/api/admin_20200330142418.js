@@ -542,7 +542,7 @@ router.post(
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const { body } = req;
-    console.log(" body]", body);
+    //  console.log(" body]", body);
     try {
       //Check email if in use
       const inUse = await User.findOne({
@@ -581,7 +581,7 @@ router.post(
         subCounty: body.subCounty,
         password: hash
       };
-      if (body.Role == "ward-admin") newUser.ward = body.ward;
+      if (body.Role == "ward-admin") newUser = body.ward;
       let createdUser = await User.create(newUser);
       // console.log(createdUser);
       //Send email

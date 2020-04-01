@@ -56,7 +56,7 @@ const UsersSchema = new Schema(
     //role for all other users of the system. required
     role: {
       type: String,
-      enum: ["admin", "mobile-client", "sub-county-admin", "ward-admin"],
+      enum: ["admin", "mobile-client"],
 
       default: "mobile-client"
     },
@@ -64,10 +64,7 @@ const UsersSchema = new Schema(
     county: {
       type: String
     },
-    subCounty: {
-      type: String
-    },
-    ward: {
+    sub_county: {
       type: String
     },
     pushToken: { type: String }
@@ -90,8 +87,8 @@ UsersSchema.methods.toJSON = function() {
     password: this.password,
     pushToken: this.pushToken,
     county: this.county,
-    subCounty: this.subCounty,
-    ward: this.ward,
+    sub_county: this.sub_county,
+
     reset: this.reset,
     interests: this.interests,
     createdAt: this.createdAt,

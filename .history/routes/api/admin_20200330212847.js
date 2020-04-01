@@ -581,7 +581,7 @@ router.post(
         subCounty: body.subCounty,
         password: hash
       };
-      if (body.Role == "ward-admin") newUser.ward = body.ward;
+      if (body.Role == "ward-admin") newUser = body.ward;
       let createdUser = await User.create(newUser);
       // console.log(createdUser);
       //Send email

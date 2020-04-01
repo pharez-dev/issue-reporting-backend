@@ -8,8 +8,6 @@ const Issue = mongoose.model("Issues");
 const Notification = mongoose.model("Notifications");
 const County = mongoose.model("Counties");
 const generator = require("generate-password");
-const rp = require("request-promise");
-const nodemailer = require("nodemailer");
 router.post("/login", (req, res, next) => {
   const { body } = req;
   console.log(body);
@@ -23,11 +21,7 @@ router.post("/login", (req, res, next) => {
         message: "Incorrect email or --password!"
       });
     }
-    if (
-      user.role !== "admin" &&
-      user.role !== "ward-admin" &&
-      user.role !== "sub-county-admin"
-    ) {
+    if (user.role !== "admin") {
       return res.status(200).json({
         success: false,
         message: "Incorrect email or --password!"
@@ -545,86 +539,12 @@ router.post(
     console.log(" body]", body);
     try {
       //Check email if in use
-      const inUse = await User.findOne({
-        email: body.email
-      });
-      if (inUse) throw new Error("Email is already in use !");
-      //Validate phone number
-      if (isNaN(body.phone)) throw new Error("Invalid phone number!");
-      const options = {
-        method: "GET",
-        uri: `http://apilayer.net/api/validate? access_key=756653a2f405c7dd3283ef464aa47eeb&number=${body.phone}&country_code=KE&format=1`,
-        json: true
-      };
-      let valid = await rp(options);
-      console.log(valid);
-      if (!valid.valid) if (!valid.success) throw new Error(valid.error.info);
-      body.phone = valid.international_format;
-      //Generate password
-      const password = generator.generate({
-        length: 8,
-        numbers: true
-      });
-      //Salt and hash
-      let salt = await bcrypt.genSalt(10);
-      let hash = await bcrypt.hash(password, salt);
-      // let match = await bcrypt.compare(password, hash);
-      // console.log(salt, hash, match);
-      //Create new User
-      let newUser = {
-        fname: body.fname,
-        lname: body.lname,
-        email: body.email,
-        phoneNumber: body.phone,
-        role: body.Role,
-        county: body.County,
-        subCounty: body.subCounty,
-        password: hash
-      };
-      if (body.Role == "ward-admin") newUser.ward = body.ward;
-      let createdUser = await User.create(newUser);
-      // console.log(createdUser);
-      //Send email
-      let sent = await mailer({
-        from: "Issue Reporting System <issuereport@yandex.com>", // sender address
-        to: "kotekunra@gmail.com" + "," + body.email, // list of receivers
-        subject: "Login Details ", // Subject line
-        text: "Issue Reporting", // plaintext body
-        html: `<p>Hello  ${capitalize(
-          body.fname
-        )} ,</p>  You have been registered to Issue Reporting System  as  a ${capitalize(
-          body.Role
-        )} <p>Login with the following details:  <p><b>Email</b>: ${
-          body.email
-        } </p><p> <b>Password</b>: ${password}</p>`
-      });
-      //   console.log(sent);
-      if (!sent.success) throw new Error(sent.message);
-      res.json({ success: true });
-    } catch (err) {
       //
+    } catch (err) {
       res.json({ success: false, message: err.message });
     }
   }
 );
-
-let transporter = nodemailer.createTransport({
-  service: "Yandex",
-  auth: {
-    user: "issuereport@yandex.com",
-    pass: "zaburi1"
-  }
-});
-const mailer = Options => {
-  return new Promise((resolve, reject) => {
-    transporter
-      .sendMail(Options)
-      .then(res => resolve({ success: true }))
-      .catch(err => {
-        reject({ success: false, message: err.message });
-      });
-  });
-};
 
 const parseUser = user => {
   if (user.role == "admin") {
@@ -637,8 +557,5 @@ const parseUser = user => {
   delete user.__v;
   return user;
 };
-const capitalize = st => {
-  if (st) return st.charAt(0).toUpperCase() + st.slice(1);
-  else return st;
-};
+
 module.exports = router;
