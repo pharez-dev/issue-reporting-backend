@@ -6,76 +6,82 @@ const { Schema } = mongoose;
 const UsersSchema = new Schema(
   {
     email: {
-      type: String
+      type: String,
     },
     alt_email: {
-      type: String
+      type: String,
     },
     fname: {
-      type: String
+      type: String,
     },
 
     lname: {
-      type: String
+      type: String,
     },
     gender: {
       type: String,
-      enum: ["male", "female"]
+      enum: ["male", "female"],
     },
     DOB: {
-      type: Date
+      type: Date,
     },
     phoneNumber: {
-      type: String
+      type: String,
     },
     salutation: {
       type: String,
       enum: ["mr", "mrs", "miss", "dr", "prof", "other"],
-      default: "other"
+      default: "other",
     },
     idNumber: {
-      type: Number
+      type: Number,
     },
     status: {
       type: String,
       enum: ["active", "suspended", "pending-approval", "approval-denied"],
       default: "active",
-      required: true
+      required: true,
     },
     password: {
       type: String,
-      required: true
+      required: true,
     },
     reset: { type: Object },
 
     isVerified: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     //role for all other users of the system. required
     role: {
       type: String,
-      enum: ["admin", "mobile-client", "sub-county-admin", "ward-admin"],
+      enum: [
+        "admin",
+        "mobile-client",
+        "sub-county-admin",
+        "ward-admin",
+        "department-official",
+      ],
 
-      default: "mobile-client"
+      default: "mobile-client",
     },
     //Both county and sub count must be known for all users
     county: {
-      type: String
+      type: String,
     },
     subCounty: {
-      type: String
+      type: String,
     },
     ward: {
-      type: String
+      type: String,
     },
-    pushToken: { type: String }
+    pushToken: { type: String },
   },
   { timestamps: true }
 );
 
-UsersSchema.methods.toJSON = function() {
+UsersSchema.methods.toJSON = function () {
   return {
     _id: this._id,
     fname: this.fname,
@@ -90,12 +96,12 @@ UsersSchema.methods.toJSON = function() {
     password: this.password,
     pushToken: this.pushToken,
     county: this.county,
-    sub_county: this.sub_county,
-
+    subCounty: this.subCounty,
+    ward: this.ward,
     reset: this.reset,
     interests: this.interests,
     createdAt: this.createdAt,
-    updatedAt: this.updatedAt
+    updatedAt: this.updatedAt,
   };
 };
 
@@ -110,7 +116,7 @@ UsersSchema.index(
     status: "text",
     county: "text",
     subcounty: "text",
-    residence: "text"
+    residence: "text",
   },
   {
     weights: {
@@ -123,8 +129,8 @@ UsersSchema.index(
       subcounty: 4,
       role: 3,
       status: 2,
-      _id: 1
-    }
+      _id: 1,
+    },
   }
 );
 

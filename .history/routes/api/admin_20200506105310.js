@@ -8,33 +8,39 @@ const Issue = mongoose.model("Issues");
 const Notification = mongoose.model("Notifications");
 const County = mongoose.model("Counties");
 const generator = require("generate-password");
-rp = require("request-promise");
+const rp = require("request-promise");
+const nodemailer = require("nodemailer");
 router.post("/login", (req, res, next) => {
   const { body } = req;
   console.log(body);
   let email = body.email;
   let password = body.password;
   let remember = body.remember;
-  User.findOne({ email }).then(user => {
+  User.findOne({ email }).then((user) => {
     if (!user) {
       return res.status(200).json({
         success: false,
-        message: "Incorrect email or --password!"
+        message: "Incorrect email or --password!",
       });
     }
-    if (user.role !== "admin") {
+    if (
+      user.role !== "admin" &&
+      user.role !== "ward-admin" &&
+      user.role !== "sub-county-admin" &&
+      user.role !== "department-official"
+    ) {
       return res.status(200).json({
         success: false,
-        message: "Incorrect email or --password!"
+        message: "Incorrect email or --password!",
       });
     }
-    bcrypt.compare(password, user.password).then(isMatch => {
+    bcrypt.compare(password, user.password).then((isMatch) => {
       if (isMatch) {
         if (user.status == "pending-approval")
           return res.status(200).json({
             success: false,
             message:
-              "Your account is yet to be approved. It might take a while as your info has to be reviewed!"
+              "Your account is yet to be approved. It might take a while as your info has to be reviewed!",
           });
         if (user.status == "suspended")
           return res
@@ -46,7 +52,7 @@ router.post("/login", (req, res, next) => {
           payload,
           "secret",
           {
-            expiresIn: body.remember ? "365d" : 60 * 30
+            expiresIn: body.remember ? "365d" : 60 * 30,
           },
           (err, token) => {
             if (err) console.error("There is some error in token", err);
@@ -55,7 +61,7 @@ router.post("/login", (req, res, next) => {
                 success: true,
                 token: `Bearer ${token}`,
 
-                message: "You have successfully logged in"
+                message: "You have successfully logged in",
               });
             }
           }
@@ -74,16 +80,16 @@ router.post("/register", (req, res, next) => {
   console.log("[register body]", body);
 
   User.findOne({
-    phoneNumber: body.phoneNumber
-  }).then(user => {
+    phoneNumber: body.phoneNumber,
+  }).then((user) => {
     if (user) {
       return res
         .status(200)
         .json({ success: false, message: "Phone number already in use" });
     } else {
       User.findOne({
-        email: body.email
-      }).then(user => {
+        email: body.email,
+      }).then((user) => {
         if (user) {
           return res
             .status(200)
@@ -95,7 +101,7 @@ router.post("/register", (req, res, next) => {
             fname: body.fname,
             lname: body.lname,
 
-            password: body.password
+            password: body.password,
           });
 
           bcrypt.genSalt(10, (err, salt) => {
@@ -105,7 +111,7 @@ router.post("/register", (req, res, next) => {
                 if (err) console.error("There was an error", err);
                 else {
                   newUser.password = hash;
-                  newUser.save().then(user => {
+                  newUser.save().then((user) => {
                     user = user.toObject();
                     delete user.password;
                     const payload = {
@@ -114,13 +120,13 @@ router.post("/register", (req, res, next) => {
                       lname: user.lname,
 
                       email: user.email,
-                      isVerified: user.isVerified
+                      isVerified: user.isVerified,
                     };
                     jwt.sign(
                       payload,
                       "secret",
                       {
-                        expiresIn: 90000
+                        expiresIn: 90000,
                       },
                       (err, token) => {
                         if (err)
@@ -130,7 +136,7 @@ router.post("/register", (req, res, next) => {
                             success: true,
                             token: `Bearer ${token}`,
 
-                            message: "Registration Successful"
+                            message: "Registration Successful",
                           });
                         }
                       }
@@ -169,10 +175,10 @@ router.post(
     const { user } = req;
     Notification.find({ to: user.role })
       .sort({ createdAt: -1 })
-      .then(data => {
+      .then((data) => {
         res.json({ success: true, data });
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err);
         res.json({ success: false, message: err.message });
       });
@@ -189,10 +195,10 @@ router.post(
     const { user } = req;
     Notification.find({ to: user.role, opened: false })
       .sort({ createdAt: -1 })
-      .then(data => {
+      .then((data) => {
         res.json({ success: true, data });
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err);
         res.json({ success: false, message: err.message });
       });
@@ -231,22 +237,22 @@ router.post(
     console.log(body);
     Issue.findById(body._id)
 
-      .then(issue => {
+      .then((issue) => {
         issue.status = body["radio-button"];
         issue.response.push({
           by: req.user._id,
           message: body.message,
           statusTo: body["radio-button"],
-          time: new Date()
+          time: new Date(),
         });
         return issue
           .save()
-          .then(async newIssue => {
+          .then(async (newIssue) => {
             return newIssue;
           })
-          .then(async issue => {
+          .then(async (issue) => {
             //fetch responders
-            let responders = issue.response.map(each => {
+            let responders = issue.response.map((each) => {
               return mongoose.Types.ObjectId(each.by);
             });
             responders = await User.find({ _id: { $in: responders } });
@@ -255,7 +261,7 @@ router.post(
             newIss.response = newIss.response.map((each, i) => {
               let response = Object.assign({}, each._doc);
               //  console.log(response);
-              responders.map(user => {
+              responders.map((user) => {
                 let by = parseUser(Object.assign({}, user._doc));
                 //console.log(by);
                 // if(by._id==each.by)
@@ -266,13 +272,13 @@ router.post(
             //  console.log(newIss);
             res.json({ success: true, issue: newIss });
           })
-          .catch(err => {
+          .catch((err) => {
             console.log(err);
             res.json({ success: false, message: err.message });
           });
         // res.json({ success: true, data });
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err);
         res.json({ success: false, message: err.message });
       });
@@ -299,7 +305,7 @@ router.post(
             by: req.user._id,
             message: body.message,
             statusTo: body["radio-button"],
-            time: new Date()
+            time: new Date(),
           });
           break;
         case "escalate":
@@ -310,11 +316,11 @@ router.post(
             to: body.escalateTo,
             message: body.message,
             statusTo: "escalated",
-            time: new Date()
+            time: new Date(),
           });
           issue.escalated = {
             bool: true,
-            to: [body.escalateTo]
+            to: [body.escalateTo],
           };
 
           break;
@@ -325,12 +331,12 @@ router.post(
 
             message: body.reason,
             statusTo: "closed",
-            time: new Date()
+            time: new Date(),
           });
           issue.closed = {
             by: req.user._id,
             reason: body.reason,
-            time: new Date()
+            time: new Date(),
           };
           //Notify user
           break;
@@ -340,7 +346,7 @@ router.post(
       /**
        * fetch responders
        *  */
-      let responders = issue.response.map(each => {
+      let responders = issue.response.map((each) => {
         return mongoose.Types.ObjectId(each.by);
       });
       responders = await User.find({ _id: { $in: responders } });
@@ -348,7 +354,7 @@ router.post(
       newIss.response = newIss.response.map((each, i) => {
         let response = Object.assign({}, each._doc);
         //  console.log(response);
-        responders.map(user => {
+        responders.map((user) => {
           let by = parseUser(Object.assign({}, user._doc));
           //console.log(by);
           // if(by._id==each.by)
@@ -389,7 +395,7 @@ router.post(
         values = body[key];
         if (Array.isArray(values)) {
           values = {
-            $in: values
+            $in: values,
           };
         }
         or.push({ [field]: values });
@@ -398,7 +404,7 @@ router.post(
 
     if (or.length > 0) {
       filter = {
-        $or: or
+        $or: or,
       };
     }
     if (or.length > 1) {
@@ -418,8 +424,8 @@ router.post(
           { type: { $regex: body.query, $options: "i" } },
           { county: { $regex: body.query, $options: "i" } },
 
-          { sub_county: { $regex: body.query, $options: "i" } }
-        ]
+          { sub_county: { $regex: body.query, $options: "i" } },
+        ],
       };
     }
     let aggregate = User.aggregate()
@@ -430,19 +436,19 @@ router.post(
         role: 1,
         status: 1,
         createdAt: 1,
-        name: { $concat: ["$fname", " ", "$lname"] }
+        name: { $concat: ["$fname", " ", "$lname"] },
       })
       .sort(sort);
     User.aggregatePaginate(aggregate, {
       page: body.page,
-      limit: body.limit
+      limit: body.limit,
     })
-      .then(results => {
+      .then((results) => {
         const data = [...results.docs];
         results.docs = data.length;
         res.json({ success: true, issues: data, meta: results });
       })
-      .catch(err => {
+      .catch((err) => {
         res.json({ success: false, message: err.message });
       });
   }
@@ -455,18 +461,18 @@ router.post(
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     County.find({})
-      .then(counties => {
+      .then((counties) => {
         // console.log("found", county);
 
         res.json({
           success: true,
-          counties
+          counties,
         });
       })
-      .catch(err => {
+      .catch((err) => {
         res.json({
           success: false,
-          message: "Failed to get counties!"
+          message: "Failed to get counties!",
         });
       });
   }
@@ -487,9 +493,9 @@ router.post(
       const options = {
         method: "GET",
         uri: `https://frozen-basin-45055.herokuapp.com/api/wards?county=${county}`,
-        json: true
+        json: true,
       };
-      let wards = await rp(options).then(function(wards) {
+      let wards = await rp(options).then(function (wards) {
         let sub_county = body.sub_county;
         if (sub_county.indexOf("Sub County") > -1)
           sub_county = sub_county.slice(
@@ -499,7 +505,7 @@ router.post(
         if (sub_county.indexOf(".") > -1)
           sub_county = sub_county.slice(0, sub_county.indexOf("."));
         console.log(wards.length, sub_county);
-        return (wards = wards.filter(ward => {
+        return (wards = wards.filter((ward) => {
           //    console.log(ward.constituency, "vs", sub_county);
           return ward.constituency == sub_county;
         }));
@@ -541,27 +547,88 @@ router.post(
     try {
       //Check email if in use
       const inUse = await User.findOne({
-        email: body.email
+        email: body.email,
       });
       if (inUse) throw new Error("Email is already in use !");
       //Validate phone number
       if (isNaN(body.phone)) throw new Error("Invalid phone number!");
       const options = {
         method: "GET",
-        uri: `http://apilayer.net/api/validate? access_key=756653a2f405c7dd3283ef464aa47eeb&number=${body.phone}&country_code=KE&format=1`,
-        json: true
+        uri: `http://apilayer.net/api/validate?access_key=756653a2f405c7dd3283ef464aa47eeb&number=${body.phone}&country_code=KE&format=1`,
+        json: true,
       };
       let valid = await rp(options);
       console.log(valid);
       if (!valid.valid) if (!valid.success) throw new Error(valid.error.info);
       body.phone = valid.international_format;
+      //Generate password
+      const password = generator.generate({
+        length: 8,
+        numbers: true,
+      });
+      //Salt and hash
+      let salt = await bcrypt.genSalt(10);
+      let hash = await bcrypt.hash(password, salt);
+      // let match = await bcrypt.compare(password, hash);
+      // console.log(salt, hash, match);
+      //Create new User
+      let newUser = {
+        fname: body.fname,
+        lname: body.lname,
+        email: body.email,
+        phoneNumber: body.phone,
+        role: body.Role,
+        county: body.County,
+        subCounty: body.subCounty,
+        department: body.department,
+        password: hash,
+      };
+      if (body.Role == "ward-admin") newUser.ward = body.ward;
+      let createdUser = await User.create(newUser);
+      // console.log(createdUser);
+      //Send email
+      let sent = await mailer({
+        from: "Issue Reporting System <issuereport@yandex.com>", // sender address
+        to: "kotekunra@gmail.com" + "," + body.email, // list of receivers
+        subject: "Login Details ", // Subject line
+        text: "Issue Reporting", // plaintext body
+        html: `<p>Hello  ${capitalize(
+          body.fname
+        )} ,</p>  You have been registered to Issue Reporting System  as  a ${capitalize(
+          body.Role
+        )} <p>Login with the following details:  <p><b>Email</b>: ${
+          body.email
+        } </p><p> <b>Password</b>: ${password}</p>`,
+      });
+      //   console.log(sent);
+      if (!sent.success) throw new Error(sent.message);
+      res.json({ success: true });
     } catch (err) {
+      //
       res.json({ success: false, message: err.message });
     }
   }
 );
 
-const parseUser = user => {
+let transporter = nodemailer.createTransport({
+  service: "Yandex",
+  auth: {
+    user: "issuereport@yandex.com",
+    pass: "zaburi1",
+  },
+});
+const mailer = (Options) => {
+  return new Promise((resolve, reject) => {
+    transporter
+      .sendMail(Options)
+      .then((res) => resolve({ success: true }))
+      .catch((err) => {
+        reject({ success: false, message: err.message });
+      });
+  });
+};
+
+const parseUser = (user) => {
   if (user.role == "admin") {
     delete user.students;
     delete user.trainers;
@@ -572,5 +639,8 @@ const parseUser = user => {
   delete user.__v;
   return user;
 };
-
+const capitalize = (st) => {
+  if (st) return st.charAt(0).toUpperCase() + st.slice(1);
+  else return st;
+};
 module.exports = router;
