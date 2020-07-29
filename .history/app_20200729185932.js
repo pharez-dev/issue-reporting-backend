@@ -43,7 +43,10 @@ const io = socketIO(server);
 
 const PORT = process.env.PORT || 8080;
 //"192.168.0.173"
-const IP = process.env.IP || process.env.OPENSHIFT_NODEJS_IP || "localhost";
+const IP =
+  process.env.IP ||
+  process.env.OPENSHIFT_NODEJS_IP ||
+   ||"localhost";
 // set the view engine to ejs
 
 app.set("view engine", "ejs");
