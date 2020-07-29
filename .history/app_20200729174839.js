@@ -8,14 +8,30 @@ const cors = require("cors");
 const errorHandler = require("errorhandler");
 const mongoose = require("mongoose");
 const useragent = require("express-useragent");
+
 mongoose.promise = global.Promise;
 mongoose.set("useCreateIndex", true);
-mongoose.connect(
-  "mongodb+srv://system:hello123@cluster0-flpph.mongodb.net/issueReporting?retryWrites=true",
-  { useNewUrlParser: true, useUnifiedTopology: true }
-);
-useMongoClient: true;
-
+const connectDB = async () => {
+  try {
+    mongoose
+      .connect(
+        "mongodb+srv://system:hello123@cluster0-flpph.mongodb.net/issueReporting?retryWrites=true",
+        { useNewUrlParser: true, useUnifiedTopology: true }
+      )
+      .catch((err) => {
+        console.log("[Mongo Connect Err] Retrying in 10s...");
+        setTimeout(() => {
+          connectDB();
+        }, 10000);
+      });
+  } catch (err) {
+    console.log("[Mongo Connect Err] Retrying in 10s...");
+    setTimeout(() => {
+      connectDB();
+    }, 10000);
+  }
+};
+connectDB();
 const isProduction = process.env.NODE_ENV === "production";
 const app = express();
 
@@ -25,8 +41,12 @@ const server = http.createServer(app);
 // This creates our socket using the instance of the server
 const io = socketIO(server);
 
-const PORT = process.env.PORT || 8081;
-const IP = process.env.IP || process.env.OPENSHIFT_NODEJS_IP;
+const PORT = process.env.PORT || 8080;
+const IP =
+  process.env.IP ||
+  process.env.OPENSHIFT_NODEJS_IP ||
+  "192.168.0.173" ||
+  "localhost";
 // set the view engine to ejs
 
 app.set("view engine", "ejs");
@@ -36,7 +56,7 @@ app.use(
     origin: "*",
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     preflightContinue: false,
-    optionsSuccessStatus: 204
+    optionsSuccessStatus: 204,
   })
 );
 app.use(require("morgan")("dev"));
@@ -48,7 +68,7 @@ app.use(
     secret: "LightBlog",
     cookie: { maxAge: 60000 },
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
   })
 );
 //Get user agent
@@ -101,8 +121,8 @@ if (!isProduction) {
     res.json({
       errors: {
         message: err.message,
-        error: err
-      }
+        error: err,
+      },
     });
   });
 }
@@ -114,8 +134,8 @@ app.use((err, req, res) => {
   res.json({
     errors: {
       message: err.message,
-      error: {}
-    }
+      error: {},
+    },
   });
 });
 
