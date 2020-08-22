@@ -228,9 +228,15 @@ router.post(
 router.post(
   "/allIssues",
   passport.authenticate("jwt", { session: false }),
-  (req, res, next) => {
+  async (req, res, next) => {
     const { body } = req;
     //console.log("[body of all ]", body);
+    let IssuesReported = await Issue.find().countDocuments();
+    let IssuesResovled = await Issue.find({
+      $or: [{ status: "resolved" }, { status: "closed" }],
+    }).countDocuments();
+
+    console.log(IssuesReported, IssuesResovled);
     let search = {};
     let filter = {};
     let sort = { createdAt: -1 };
@@ -293,12 +299,46 @@ router.post(
         });
         //console.log(data);
         results.docs = data.length;
-        res.json({ success: true, issues: data, meta: results });
+        res.json({
+          success: true,
+          issues: data,
+          meta: results,
+          IssuesReported,
+          IssuesResovled,
+        });
       })
       .catch((err) => {
         console.log(err);
         res.json({ success: false, message: err.message });
       });
+  }
+);
+/**
+ *Endpoint for resolving responder ids  ...*
+ **/
+router.post(
+  "/responses",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    let { response } = req.body;
+    try {
+      let ids = response.map((each) => mongoose.Types.ObjectId(each.by));
+
+      let userInfo = await User.find(
+        { _id: { $in: ids } },
+        { fname: 1, lname: 1, role: 1 }
+      );
+      response = response.map((each) => {
+        userInfo.map((info) => {
+          if (info._id == each.by)
+            each.by = info.fname + " " + info.lname + "- Sub County Admin ";
+        });
+        return each;
+      });
+      return res.json({ success: true, response });
+    } catch (err) {
+      return res.json({ success: false, message: err.message });
+    }
   }
 );
 const parseUser = (user) => {
