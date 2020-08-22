@@ -11,7 +11,6 @@ const generator = require("generate-password");
 const rp = require("request-promise");
 const nodemailer = require("nodemailer");
 const { Expo } = require("expo-server-sdk");
-let expo = new Expo();
 
 router.post("/login", (req, res, next) => {
   const { body } = req;
@@ -383,17 +382,13 @@ router.post(
             {
               to: pT.pushToken,
               sound: "default",
-              body: `Hello ${pT.fname.toUpperCase()}, We have responded to the issue you reported. Check Issue Reporting App for update `,
+              body: `Hello ${pt.fname.toUpperCase()}, We have responded to the issue you reported. Check Issue Reporting App for update `,
               channelId: "issue-reports",
             },
           ]);
         }
       }
-      res.json({
-        success: true,
-        issue: newIss,
-        message: "Issue updated successfully",
-      });
+      res.json({ success: true, issue: newIss });
     } catch (err) {
       console.log(err);
       res.json({ success: false, message: err.message });

@@ -11,7 +11,6 @@ const generator = require("generate-password");
 const rp = require("request-promise");
 const nodemailer = require("nodemailer");
 const { Expo } = require("expo-server-sdk");
-let expo = new Expo();
 
 router.post("/login", (req, res, next) => {
   const { body } = req;
@@ -368,32 +367,8 @@ router.post(
       console.log(newIss);
       //Send notification to user
       if (newIss.notify) {
-        // {
-        //   //     to: "ExponentPushToken[20Op7YOrhkk5t5EKNUO827]",
-        //   //     sound: "default",
-        //   //     body: "Hello again Pharez, Your issue server just woke up !!!",
-        //   //     channelId: "issue-reports"
-        //   //   }
-        let pT = await User.findOne(
-          { _id: newIss.userId },
-          { pushToken: 1, fname: 1, lname: 1 }
-        );
-        if (pT.pushToken) {
-          sendNotification([
-            {
-              to: pT.pushToken,
-              sound: "default",
-              body: `Hello ${pT.fname.toUpperCase()}, We have responded to the issue you reported. Check Issue Reporting App for update `,
-              channelId: "issue-reports",
-            },
-          ]);
-        }
       }
-      res.json({
-        success: true,
-        issue: newIss,
-        message: "Issue updated successfully",
-      });
+      res.json({ success: true, issue: newIss });
     } catch (err) {
       console.log(err);
       res.json({ success: false, message: err.message });

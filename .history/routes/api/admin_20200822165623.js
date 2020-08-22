@@ -10,6 +10,8 @@ const County = mongoose.model("Counties");
 const generator = require("generate-password");
 const rp = require("request-promise");
 const nodemailer = require("nodemailer");
+const { Expo } = require("expo-server-sdk");
+
 router.post("/login", (req, res, next) => {
   const { body } = req;
   console.log(body);
@@ -26,7 +28,8 @@ router.post("/login", (req, res, next) => {
     if (
       user.role !== "admin" &&
       user.role !== "ward-admin" &&
-      user.role !== "sub-county-admin"
+      user.role !== "sub-county-admin" &&
+      user.role !== "department-official"
     ) {
       return res.status(200).json({
         success: false,
@@ -362,6 +365,27 @@ router.post(
         return each;
       });
       console.log(newIss);
+      //Send notification to user
+      if (newIss.notify) {
+        // {
+        //   //     to: "ExponentPushToken[20Op7YOrhkk5t5EKNUO827]",
+        //   //     sound: "default",
+        //   //     body: "Hello again Pharez, Your issue server just woke up !!!",
+        //   //     channelId: "issue-reports"
+        //   //   }
+        let pT = await User.findOne(
+          { _id: newIssue.userId },
+          { pushToken: 1, fname: 1, lname: 1 }
+        );
+        sendNotification([
+          {
+            to: "ExponentPushToken[20Op7YOrhkk5t5EKNUO827]",
+            sound: "default",
+            body: `Hello ${pt.fname.toUpperCase()}, We have responded to the issue you reported. Check Issue Reporting App for update `,
+            channelId: "issue-reports",
+          },
+        ]);
+      }
       res.json({ success: true, issue: newIss });
     } catch (err) {
       console.log(err);
@@ -579,6 +603,7 @@ router.post(
         role: body.Role,
         county: body.County,
         subCounty: body.subCounty,
+        department: body.department,
         password: hash,
       };
       if (body.Role == "ward-admin") newUser.ward = body.ward;
@@ -607,6 +632,76 @@ router.post(
     }
   }
 );
+
+const sendNotification = (messages) => {
+  //   messages.push({
+  //     to: "ExponentPushToken[20Op7YOrhkk5t5EKNUO827]",
+  //     sound: "default",
+  //     body: "Hello again Pharez, Your issue server just woke up !!!",
+  //     channelId: "issue-reports"
+  //   });
+  let chunks = expo.chunkPushNotifications(messages);
+  let tickets = [];
+  (async () => {
+    // Send the chunks to the Expo push notification service. There are
+    // different strategies you could use. A simple one is to send one chunk at a
+    // time, which nicely spreads the load out over time:
+    for (let chunk of chunks) {
+      try {
+        let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+        //   console.log(ticketChunk);
+        tickets.push(...ticketChunk);
+        // NOTE: If a ticket contains an error code in ticket.details.error, you
+        // must handle it appropriately. The error codes are listed in the Expo
+        // documentation:
+        // https://docs.expo.io/versions/latest/guides/push-notifications#response-format
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  })();
+  let receiptIds = [];
+  for (let ticket of tickets) {
+    // NOTE: Not all tickets have IDs; for example, tickets for notifications
+    // that could not be enqueued will have error information and no receipt ID.
+    if (ticket.id) {
+      receiptIds.push(ticket.id);
+    }
+  }
+
+  let receiptIdChunks = expo.chunkPushNotificationReceiptIds(receiptIds);
+  (async () => {
+    // Like sending notifications, there are different strategies you could use
+    // to retrieve batches of receipts from the Expo service.
+    for (let chunk of receiptIdChunks) {
+      try {
+        let receipts = await expo.getPushNotificationReceiptsAsync(chunk);
+        console.log(receipts);
+
+        // The receipts specify whether Apple or Google successfully received the
+        // notification and information about an error, if one occurred.
+        for (const receiptId in receipts) {
+          const { status, message, details } = receipts[receiptId];
+          if (status === "ok") {
+            continue;
+          } else if (status === "error") {
+            console.error(
+              `There was an error sending a notification: ${message}`
+            );
+            if (details && details.error) {
+              // The error codes are listed in the Expo documentation:
+              // https://docs.expo.io/versions/latest/guides/push-notifications/#individual-errors
+              // You must handle the errors appropriately.
+              console.error(`The error code is ${details.error}`);
+            }
+          }
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  })();
+};
 
 let transporter = nodemailer.createTransport({
   service: "Yandex",
