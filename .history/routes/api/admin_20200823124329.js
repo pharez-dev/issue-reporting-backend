@@ -657,25 +657,15 @@ router.post(
       }).countDocuments();
       let users = await User.find({ role: "mobile-client" }).countDocuments();
       let issues = await Issue.find({}, { locationInfo: 1, type: 1 });
-      let counties = await County.find({}, { coords: 1, name: 1 }).sort({
-        name: 1,
-      });
-      res.json({
-        success: true,
-        reported,
-        resovled,
-        open,
-        users,
-        issues,
-        counties,
-      });
+
+      res.json({ success: true, reported, resovled, open, users, issues });
     } catch (err) {
       res.json({ success: false, message: err.message });
     }
   }
 );
 
-async () => {
+(async () => {
   County.find({}).then(async (counties) => {
     counties = await Promise.all(
       counties.map(async (each) => {
@@ -683,13 +673,13 @@ async () => {
           method: "GET",
           uri: `https://api.opencagedata.com/geocode/v1/json?q=${each.name},Kenya&key=90a239d0d8bc4d0a967741fc9daa265c`,
           json: true,
-        }).then(async (data) => {
+        }).then(asycn(data) => {
           console.log(
             "[data]",
             data.results[0].formatted,
             data.results[0].geometry
           );
-          await County.findOneAndUpdate(
+      await   County.findOneAndUpdate(
             { _id: each._id },
             { coords: data.results[0].geometry }
           );
@@ -700,9 +690,9 @@ async () => {
         return each;
       })
     );
-    console.log("Done");
+    console.log("Done", counties);
   });
-};
+})();
 const sendNotification = (messages) => {
   //   messages.push({
   //     to: "ExponentPushToken[20Op7YOrhkk5t5EKNUO827]",

@@ -30,7 +30,7 @@ CountiesSchema.methods.toJSON = function () {
     name: this.name,
     capital: this.capital,
     code: this.code,
-    coords: this.coords,
+    coords:this.coords
 
     sub_counties: this.sub_counties,
 

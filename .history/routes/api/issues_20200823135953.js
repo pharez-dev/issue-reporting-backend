@@ -6,8 +6,6 @@ const passport = require("passport");
 const User = mongoose.model("Users");
 const Notification = mongoose.model("Notifications");
 const Issue = mongoose.model("Issues");
-const County = mongoose.model("Counties");
-
 const cloudinary = require("cloudinary");
 const { Expo } = require("expo-server-sdk");
 
@@ -399,67 +397,58 @@ const parseUser = (user) => {
 module.exports = router;
 const randomLocation = require("random-location");
 const faker = require("faker");
-// (async () => {
-//   const R = 15000; // meters
-//   let data = [];
+const P = {
+  latitude: -1.2872,
+  longitude: 36.8283,
+};
 
-//   let counties = await County.find({}, { coords: 1 });
-//   counties.map((each) => {
-//     for (var i = 0; i < 1; i++) {
-//       let P = {
-//         latitude: each.coords.lat,
-//         longitude: each.coords.lng,
-//       };
-//       let randomPoint = randomLocation.randomCirclePoint(
-//         P,
-//         R,
-//         (randomFn = Math.random)
-//       );
-//       let issue = {
-//         images: [
-//           "https://res.cloudinary.com/dfvyoh7qx/image/upload/v1582555176/m5n4st2i7wrbe6lyxyie.jpg",
-//           "https://res.cloudinary.com/dfvyoh7qx/image/upload/v1582555176/utfioxwrcqn5g1f2ug67.jpg",
-//           "https://res.cloudinary.com/dfvyoh7qx/image/upload/v1582555177/gtusiyrrjmsm0mxmuj73.jpg",
-//         ],
-//         notify: true,
+const R = 30000; // meters
+let data = [];
+for (var i = 0; i < 5; i++) {
+  let randomPoint = randomLocation.randomCirclePoint(P, R);
+  let issue = {
+    images: [
+      "https://res.cloudinary.com/dfvyoh7qx/image/upload/v1582555176/m5n4st2i7wrbe6lyxyie.jpg",
+      "https://res.cloudinary.com/dfvyoh7qx/image/upload/v1582555176/utfioxwrcqn5g1f2ug67.jpg",
+      "https://res.cloudinary.com/dfvyoh7qx/image/upload/v1582555177/gtusiyrrjmsm0mxmuj73.jpg",
+    ],
+    notify: true,
 
-//         reportId: "RP/HL/2020/02/" + uniqid.time().toUpperCase(),
-//         county: "random",
-//         type: faker.random.arrayElement([
-//           "Roads and transport",
-//           "Water  and sanitation",
-//           "Housing and land",
-//           "Agriculture and livestock",
-//           "Health Services and Public Health",
-//           "other",
-//         ]),
-//         locationInfo: {
-//           coords: {
-//             altitude: 0,
-//             heading: 0,
-//             longitude: randomPoint.longitude,
-//             speed: 0,
-//             latitude: randomPoint.latitude,
-//             accuracy: 33.185001373291016,
-//           },
-//           address: {
-//             postalCode: null,
-//             country: "random",
-//             isoCountryCode: "KE",
-//             name: "random",
-//             city: "random",
-//             street: "random",
-//             region: "random",
-//           },
-//         },
-//         description: "random",
-//         userId: "5e3d0603f3b44a2a24820326",
-//       };
-//       data.push(issue);
-//     }
-//   });
-//   Issue.create(data);
-//   Issue.deleteMany({ description: "random" })
-//     .then()
-//     .catch((err) => console.err);
-// })();
+    reportId: "RP/HL/2020/02/" + uniqid.time().toUpperCase(),
+    county: "random",
+    type: faker.random.arrayElement([
+      "Roads and transport",
+      "Water  and sanitation",
+      "Housing and land",
+      "Agriculture and livestock",
+      "Health Services and Public Health",
+      "other",
+    ]),
+    locationInfo: {
+      coords: {
+        altitude: 0,
+        heading: 0,
+        longitude: 36.769609,
+        speed: 0,
+        latitude: randomPoint.latitude,
+        accuracy: 33.185001373291016,
+      },
+      address: {
+        postalCode: null,
+        country: "random",
+        isoCountryCode: "KE",
+        name: "random",
+        city: "random",
+        street: "random",
+        region: "random",
+      },
+    },
+    description: "random",
+    userId: "5e3d0603f3b44a2a24820326",
+  };
+  data.push(issue);
+}
+//Issue.create(data);
+Issue.deleteMany({ description: "random" })
+  .then()
+  .catch((err) => console.err);

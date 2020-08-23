@@ -657,18 +657,8 @@ router.post(
       }).countDocuments();
       let users = await User.find({ role: "mobile-client" }).countDocuments();
       let issues = await Issue.find({}, { locationInfo: 1, type: 1 });
-      let counties = await County.find({}, { coords: 1, name: 1 }).sort({
-        name: 1,
-      });
-      res.json({
-        success: true,
-        reported,
-        resovled,
-        open,
-        users,
-        issues,
-        counties,
-      });
+      let counties = await County.find({}, { coords: 1, name });
+      res.json({ success: true, reported, resovled, open, users, issues });
     } catch (err) {
       res.json({ success: false, message: err.message });
     }

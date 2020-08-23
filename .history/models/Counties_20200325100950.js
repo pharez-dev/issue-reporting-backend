@@ -6,36 +6,32 @@ const { Schema } = mongoose;
 const CountiesSchema = new Schema(
   {
     name: {
-      type: String,
+      type: String
     },
     capital: {
-      type: String,
+      type: String
     },
     code: {
-      type: String,
+      type: String
     },
     sub_counties: {
-      type: Array,
-    },
-    coords: {
-      type: Object,
-    },
+      type: Array
+    }
   },
   { timestamps: true }
 );
 
-CountiesSchema.methods.toJSON = function () {
+CountiesSchema.methods.toJSON = function() {
   return {
     _id: this._id,
     name: this.name,
     capital: this.capital,
     code: this.code,
-    coords: this.coords,
 
     sub_counties: this.sub_counties,
 
     createdAt: this.createdAt,
-    updatedAt: this.updatedAt,
+    updatedAt: this.updatedAt
   };
 };
 
@@ -50,7 +46,7 @@ CountiesSchema.index(
     status: "text",
     county: "text",
     subcounty: "text",
-    residence: "text",
+    residence: "text"
   },
   {
     weights: {
@@ -63,8 +59,8 @@ CountiesSchema.index(
       subcounty: 4,
       role: 3,
       status: 2,
-      _id: 1,
-    },
+      _id: 1
+    }
   }
 );
 
