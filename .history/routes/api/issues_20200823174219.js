@@ -403,7 +403,7 @@ const faker = require("faker");
   const R = 15000; // meters
   let data = [];
 
-  let counties = await County.find({}, { coords: 1, name: 1 });
+  let counties = await County.find({}, { coords: 1 });
   counties.map((each) => {
     for (var i = 0; i < 1; i++) {
       let P = {

@@ -667,8 +667,7 @@ router.post(
         {
           $group: { _id: "$locationInfo.address.region", total: { $sum: 1 } },
         },
-        { $sort: { total: -1 } },
-        { $limit: 8 },
+        { $sort: { total: 1 } },
       ]);
       console.log(topCounties);
       res.json({

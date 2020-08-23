@@ -663,13 +663,9 @@ router.post(
       let latest = await Issue.find({}, { type: 1, description: 1 })
         .limit(5)
         .sort({ createdAt: -1 });
-      let topCounties = await Issue.aggregate([
-        {
-          $group: { _id: "$locationInfo.address.region", total: { $sum: 1 } },
-        },
-        { $sort: { total: -1 } },
-        { $limit: 8 },
-      ]);
+      let topCounties = await Issue.aggregate({
+        $group: { _id: "$locationInfo.address.region", total: { $sum: 1 } },
+      });
       console.log(topCounties);
       res.json({
         success: true,
@@ -680,11 +676,9 @@ router.post(
         issues,
         counties,
         latest,
-        topCounties,
       });
     } catch (err) {
-      console.log(err);
-      // res.json({ success: false, message: err.message });
+      res.json({ success: false, message: err.message });
     }
   }
 );
