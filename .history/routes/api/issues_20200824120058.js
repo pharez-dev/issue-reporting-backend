@@ -167,7 +167,7 @@ router.post(
     //Filter by admin
     if (req.user.role == "ward-admin") {
       adminFilter = {
-        "escalated.to": { $in: [req.user.ward] },
+        "escalated.to[0]": req.user.ward,
       };
     }
 

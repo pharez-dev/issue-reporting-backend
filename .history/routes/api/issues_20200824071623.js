@@ -162,20 +162,11 @@ router.post(
     console.log("[body of all ]", body);
     let search = {};
     let filter = {};
-    let adminFilter = {};
     let sort = { createdAt: -1 };
-    //Filter by admin
-    if (req.user.role == "ward-admin") {
-      adminFilter = {
-        "escalated.to": { $in: [req.user.ward] },
-      };
-    }
-
     //Sorting
     if (body.sortField) {
       sort = { [body.sortField]: body.sortOrder == "ascend" ? 1 : -1 };
     }
-
     //console.log(Object.keys(body));
     //filtering
     let or = [];
@@ -220,7 +211,7 @@ router.post(
     }
     let aggregate = Issue.aggregate()
       .match({
-        $and: [search, filter, adminFilter],
+        $and: [search, filter],
       })
       .sort(sort);
     Issue.aggregatePaginate(aggregate, {
@@ -468,7 +459,7 @@ const faker = require("faker");
       data.push(issue);
     }
   });
-  // Issue.create(data);
+  Issue.create(data);
   Issue.deleteMany({ description: "random" })
     .then()
     .catch((err) => console.err);

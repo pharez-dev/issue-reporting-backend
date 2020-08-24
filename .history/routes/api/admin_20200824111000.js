@@ -635,8 +635,6 @@ router.post(
       res.json({ success: true });
     } catch (err) {
       console.log(err);
-      if (!err.message.includes("Email"))
-        User.deleteOne({ email: body.email }).then().catch();
       res.json({ success: false, message: err.message });
     }
   }
