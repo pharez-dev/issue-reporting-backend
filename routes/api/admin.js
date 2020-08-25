@@ -321,9 +321,16 @@ router.post(
             statusTo: "escalated",
             time: new Date(),
           });
+          console.log(body.escalateTo, "vs", body.escalateTo.substring(0, 2));
           issue.escalated = {
             bool: true,
-            to: [body.escalateTo],
+            to: [body.escalateTo.substring(3, body.escalateTo.length)],
+            category:
+              body.escalateTo.substring(0, 3) == "(W)"
+                ? "ward"
+                : body.escalateTo.substring(0, 3) == "(D)"
+                ? "department"
+                : null,
           };
 
           break;

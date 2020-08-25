@@ -7,7 +7,9 @@ const User = mongoose.model("Users");
 const Notification = mongoose.model("Notifications");
 const Issue = mongoose.model("Issues");
 const County = mongoose.model("Counties");
-
+const imagemin = require("imagemin");
+const imageminJpegtran = require("imagemin-jpegtran");
+const imageminPngquant = require("imagemin-pngquant");
 const cloudinary = require("cloudinary");
 const { Expo } = require("expo-server-sdk");
 
@@ -34,24 +36,22 @@ router.post(
     const { user } = req;
     const options = {
       multiples: true,
-      maxFileSize: 1024 * 1024 * 100,
+      maxFileSize: 1024 * 1024 * 10,
     };
 
     const form = formidable(options);
     //console.log(req.user)
-    new Promise((resolve, reject) => {
+    new Promise(async (resolve, reject) => {
       form.parse(req);
       let issueDetails = {};
       let images = [];
       form.on("error", (err) => {
         console.log(err.message);
-        return res
-          .status(200)
-          .json({ message: "An error occured in processing your request" });
+        return res.status(200).json({ message: err.message });
       });
       form.on("fileBegin", (filename, file) => {
-        // let img = uniqid("image_") + path.extname(file.name);
-        // file.path = path.join(__dirname + "/../../public/uploads/") + img;
+        // let img = uniqid() + path.extname(file.name);
+        // file.path = path.join(__dirname + "../../../cimages/") + img;
         images.push(file);
       });
       form.on("field", (field, name) => {
@@ -62,95 +62,118 @@ router.post(
           images,
         });
       });
-    }).then(async (data) => {
-      new Promise((resolve, reject) => {
-        data.images.map(async (eachImage) => {
-          cloudinary.v2.uploader
-            .upload(eachImage.path)
-            .then((result) => {
-              fs.unlinkSync(eachImage.path);
-              if (data.images.length - 1 === data.issueDetails.images.length) {
-                data.issueDetails.images.push(result.secure_url);
-                return resolve(data.issueDetails);
-              } else {
-                data.issueDetails.images.push(result.secure_url);
-              }
+    })
+      .then(async (data) => {
+        // console.log(data.images);
+        // let paths = data.images.map((e) => e.path);
+        // console.log(paths);
+        // const files = await imagemin(paths, {
+        //   destination: "../../../cimages/optimized/",
+        //   plugins: [
+        //     imageminJpegtran(),
+        //     imageminPngquant({
+        //       quality: [0.6, 0.8],
+        //     }),
+        //   ],
+        // });
+
+        // console.log("[Optimized]", files);
+        // return;
+
+        new Promise((resolve, reject) => {
+          data.images.map(async (eachImage) => {
+            cloudinary.v2.uploader
+              .upload(eachImage.path)
+              .then((result) => {
+                fs.unlinkSync(eachImage.path);
+                if (
+                  data.images.length - 1 ===
+                  data.issueDetails.images.length
+                ) {
+                  data.issueDetails.images.push(result.secure_url);
+                  return resolve(data.issueDetails);
+                } else {
+                  data.issueDetails.images.push(result.secure_url);
+                }
+              })
+              .catch((err) => {
+                console.log(err);
+                res.json({ success: false, message: err.message });
+              });
+          });
+        }).then((data) => {
+          console.log("[data]", data);
+
+          let type = null;
+          switch (data.issueType) {
+            case "Water and sanitation":
+              type = "WS/";
+              break;
+            case "Roads and transport":
+              type = "RT/";
+              break;
+            case "Housing and land":
+              type = "HL/";
+              break;
+            case "Agriculture and livestock":
+              type = "AL/";
+              break;
+            case "Health Services and Public Health":
+              type = "HH";
+            default:
+              type = "O/";
+              break;
+          }
+
+          let reportId =
+            "RP/" +
+            type +
+            moment(new Date()).format("YYYY") +
+            "/" +
+            moment(new Date()).format("MM") +
+            "/" +
+            uniqid.time().toUpperCase();
+          new Issue({
+            reportId,
+            county: data.locationInfo.address.region,
+            sub_county: data.sub_county,
+            type: data.issueType,
+            notify: data.notify,
+            locationInfo: data.locationInfo,
+            description: data.description,
+            proposedSolution: data.proposedSolution,
+            images: data.images,
+            userId: user._id,
+          })
+            .save()
+            .then(async (newIssue) => {
+              //console.log(newIssue);
+              await Notification.create({
+                title: `${req.user.fname} has just reported a  new issue.`,
+                type: "new-report",
+                body: newIssue.description,
+                doc: newIssue,
+                createdAt: new Date(),
+                channel: "io",
+                to: "admin",
+                initiator: req.user._id,
+              });
+              req.io.to("admin").emit("notification2", {
+                title: `${req.user.fname} has just reported a  new issue.`,
+                description: newIssue.description,
+                type: "new-report",
+                createdAt: new Date(),
+              });
+              res.status(200).json({ success: true, issue: newIssue });
             })
             .catch((err) => {
-              console.log(err);
-              reject(err);
+              res.json({ success: false, message: err.message });
             });
         });
-      }).then((data) => {
-        console.log("[data]", data);
-
-        let type = null;
-        switch (data.issueType) {
-          case "Water and sanitation":
-            type = "WS/";
-            break;
-          case "Roads and transport":
-            type = "RT/";
-            break;
-          case "Housing and land":
-            type = "HL/";
-            break;
-          case "Agriculture and livestock":
-            type = "AL/";
-            break;
-          case "Health Services and Public Health":
-            type = "HH";
-          default:
-            type = "O/";
-            break;
-        }
-
-        let reportId =
-          "RP/" +
-          type +
-          moment(new Date()).format("YYYY") +
-          "/" +
-          moment(new Date()).format("MM") +
-          "/" +
-          uniqid.time().toUpperCase();
-        new Issue({
-          reportId,
-          county: data.locationInfo.address.region,
-          sub_county: data.sub_county,
-          type: data.issueType,
-          notify: data.notify,
-          locationInfo: data.locationInfo,
-          description: data.description,
-          proposedSolution: data.proposedSolution,
-          images: data.images,
-          userId: user._id,
-        })
-          .save()
-          .then(async (newIssue) => {
-            //console.log(newIssue);
-            await Notification.create({
-              title: `${req.user.fname} has just reported a  new issue.`,
-              type: "new-report",
-              body: newIssue.description,
-              doc: newIssue,
-              createdAt: new Date(),
-              channel: "io",
-              to: "admin",
-              initiator: req.user._id,
-            });
-            req.io.to("admin").emit("notification2", {
-              title: `${req.user.fname} has just reported a  new issue.`,
-              description: newIssue.description,
-              type: "new-report",
-              createdAt: new Date(),
-            });
-            res.status(200).json({ success: true, issue: newIssue });
-          })
-          .catch((err) => {
-            reject(err);
-          });
+      })
+      .catch((err) => {
+        res.json({ success: false, message: err.message });
       });
-    });
   }
 );
 //Fetch all issues
@@ -165,10 +188,17 @@ router.post(
     let adminFilter = {};
     let sort = { createdAt: -1 };
     //Filter by admin
+
     if (req.user.role == "ward-admin") {
       adminFilter = {
         "escalated.to": { $in: [req.user.ward] },
       };
+    } else if (req.user.role == "department-official") {
+      console.log([req.user.department]);
+      adminFilter = {
+        "escalated.to": { $in: [req.user.department] },
+      };
+      console.log(adminFilter);
     }
 
     //Sorting
@@ -437,7 +467,7 @@ const faker = require("faker");
         status: "pending",
         type: faker.random.arrayElement([
           "Roads and transport",
-          "Water  and sanitation",
+          "Water and sanitation",
           "Housing and land",
           "Agriculture and livestock",
           "Health Services and Public Health",

@@ -18,10 +18,10 @@ const IssueSchema = new Schema(
         "escalated",
         "in progress", //Seen by county official
         "resolved",
-        "closed"
+        "closed",
       ],
       default: "pending",
-      trim: true
+      trim: true,
     },
     images: { type: Array },
     locationInfo: { type: Object },
@@ -29,7 +29,7 @@ const IssueSchema = new Schema(
     proposedSolution: { type: String, trim: true },
     notify: {
       type: Boolean,
-      default: true
+      default: true,
     },
     response: [
       {
@@ -43,27 +43,28 @@ const IssueSchema = new Schema(
             "escalated",
             "in progress", //Seen by county official
             "resolved",
-            "closed"
-          ]
+            "closed",
+          ],
         },
-        time: Date
-      }
+        time: Date,
+      },
     ],
     escalated: {
       bool: Boolean,
-      to: [{ type: String }]
+      category: { type: String },
+      to: [{ type: String }],
     },
 
     closed: {
       by: { type: Schema.Types.ObjectId, ref: "Users" },
       reason: { type: String, trim: true },
-      time: Date
-    }
+      time: Date,
+    },
   },
   { timestamps: true }
 );
 
-IssueSchema.methods.toJSON = function() {
+IssueSchema.methods.toJSON = function () {
   return {
     _id: this._id,
     userId: this.userId,
@@ -76,7 +77,7 @@ IssueSchema.methods.toJSON = function() {
     description: this.description,
     images: this.images,
     createdAt: this.createdAt,
-    updatedAt: this.updatedAt
+    updatedAt: this.updatedAt,
   };
 };
 
@@ -91,7 +92,7 @@ IssueSchema.index(
     status: "text",
     county: "text",
     subcounty: "text",
-    residence: "text"
+    residence: "text",
   },
   {
     weights: {
@@ -104,8 +105,8 @@ IssueSchema.index(
       subcounty: 4,
       role: 3,
       status: 2,
-      _id: 1
-    }
+      _id: 1,
+    },
   }
 );
 
