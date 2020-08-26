@@ -46,7 +46,7 @@ const PORT = process.env.PORT || 8080;
 const IP =
   process.env.IP ||
   process.env.OPENSHIFT_NODEJS_IP ||
-  // "192.168.0.173" ||
+  "192.168.0.173" ||
   "0.0.0.0";
 // set the view engine to ejs
 
