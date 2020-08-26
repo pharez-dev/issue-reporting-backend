@@ -272,9 +272,9 @@ router.post(
       search = {
         $or: [
           { type: { $regex: body.query, $options: "i" } },
-          { status: { $regex: body.query, $options: "i" } },
+          { county: { $regex: body.query, $options: "i" } },
 
-          { description: { $regex: body.query, $options: "i" } },
+          { sub_county: { $regex: body.query, $options: "i" } },
         ],
       };
     }
