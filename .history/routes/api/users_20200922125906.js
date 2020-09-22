@@ -356,9 +356,7 @@ router.post(
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const { body } = req;
-    const { user } = req;
     console.log("[update body]", body);
-
     const { fname, lname, email, phoneNumber } = req.body;
     try {
       if (user.email !== email) {

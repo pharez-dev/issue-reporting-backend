@@ -213,23 +213,13 @@ router.post(
 router.post(
   "/update_notifications",
   passport.authenticate("jwt", { session: false }),
-  async (req, res, next) => {
+  (req, res, next) => {
     const { body } = req;
     const { user } = req;
     console.log("[body of updatenotifications]", body);
-    let newUpdated = await Notification.findOneAndUpdate(
-      { _id: body.record },
-      { opened: true },
-      { returnNewDocument: true }
-    );
-    console.log(newUpdated);
-    let newNotifications = await Notification.find({
-      to: user.role,
-      opened: false,
-    }).sort({ createdAt: -1 });
-    //emit new
-    req.io.to(req.user._id).emit("replace-notifications", newNotifications);
-    res.json({});
+    let  newNotifications = await    Notification.find({ to: user.role, opened: false }).sort({ createdAt: -1 })
+
+ 
     //   .then(data => {
     //     res.json({ success: true, data });
     //   })

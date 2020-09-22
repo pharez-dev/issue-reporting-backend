@@ -182,7 +182,7 @@ router.post(
   passport.authenticate("jwt", { session: false }),
   (req, res, next) => {
     const { body } = req;
-    // console.log("[body of all ]", body);
+    console.log("[body of all ]", body);
     let search = {};
     let filter = {};
     let adminFilter = {};
@@ -234,7 +234,7 @@ router.post(
       //   $or:and
       // }
     }
-    // console.log("[filter]", filter);
+    console.log("[filter]", filter);
     //  if(filter['$or'])
     //Searching
     if (body.query) {

@@ -356,23 +356,14 @@ router.post(
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const { body } = req;
-    const { user } = req;
     console.log("[update body]", body);
-
-    const { fname, lname, email, phoneNumber } = req.body;
+    const { name, email, phoneNumber, phoneCode } = req.body;
     try {
-      if (user.email !== email) {
-        let checkEmail = await User.findOne({ email });
-        if (checkEmail) {
-          return res.json({
-            success: false,
-            message: "Email is already in use!",
-          });
-        }
-      }
+      await User.findOne({ email });
+
       User.findOneAndUpdate(
         { _id: mongoose.Types.ObjectId(req.user._id) },
-        { fname, lname, email, phoneNumber },
+        { name, email, phoneNumber, phoneCode },
         { new: true }
       ).then((data) => {
         const user = parseUser(data._doc);

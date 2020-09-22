@@ -234,7 +234,7 @@ router.post(
       //   $or:and
       // }
     }
-    // console.log("[filter]", filter);
+    console.log("[filter]", filter);
     //  if(filter['$or'])
     //Searching
     if (body.query) {

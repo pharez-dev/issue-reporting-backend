@@ -11,6 +11,7 @@ const useragent = require("express-useragent");
 
 mongoose.promise = global.Promise;
 mongoose.set("useCreateIndex", true);
+mongoose.set("useFindAndModify", false);
 const connectDB = async () => {
   try {
     mongoose
@@ -43,7 +44,11 @@ const io = socketIO(server);
 
 const PORT = process.env.PORT || 8080;
 //"192.168.0.173"
-const IP = process.env.IP || process.env.OPENSHIFT_NODEJS_IP || "0.0.0.0";
+const IP =
+  process.env.IP ||
+  process.env.OPENSHIFT_NODEJS_IP ||
+  "192.168.1.21" ||
+  "0.0.0.0";
 // set the view engine to ejs
 
 app.set("view engine", "ejs");

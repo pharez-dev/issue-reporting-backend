@@ -222,7 +222,6 @@ router.post(
       { opened: true },
       { returnNewDocument: true }
     );
-    console.log(newUpdated);
     let newNotifications = await Notification.find({
       to: user.role,
       opened: false,

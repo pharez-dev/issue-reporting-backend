@@ -182,7 +182,7 @@ router.post(
   passport.authenticate("jwt", { session: false }),
   (req, res, next) => {
     const { body } = req;
-    // console.log("[body of all ]", body);
+    console.log("[body of all ]", body);
     let search = {};
     let filter = {};
     let adminFilter = {};
@@ -234,7 +234,7 @@ router.post(
       //   $or:and
       // }
     }
-    // console.log("[filter]", filter);
+    console.log("[filter]", filter);
     //  if(filter['$or'])
     //Searching
     if (body.query) {
@@ -289,8 +289,7 @@ router.post("/single", (req, res, next) => {
           let by = parseUser(Object.assign({}, user._doc));
           //console.log(by);
           // if(by._id==each.by)
-          each = { ...response };
-          each = { ...each, by };
+          each = { ...each._doc, by };
         });
         return each;
       });

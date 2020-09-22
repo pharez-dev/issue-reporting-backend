@@ -4,7 +4,7 @@ const User = mongoose.model("Users");
 //const Conversation = mongoose.model("Conversations");
 //const Message = mongoose.model("Messages");
 
-exports = module.exports = (io) => {
+exports = module.exports = io => {
   io.use((socket, next) => {
     const token = socket.handshake.query.token;
     //  console.log("[handshake]", socket.handshake.query.num);
@@ -19,7 +19,7 @@ exports = module.exports = (io) => {
       // set the user’s mongodb _id to the socket for future use
       //  console.log("[decoded]", decoded);
       User.findById(decoded._id)
-        .then((user) => {
+        .then(user => {
           if (user) {
             //console.log(user)
             console.log("Authenticated socket connected: " + user.fname);
@@ -27,7 +27,7 @@ exports = module.exports = (io) => {
             return user;
           }
         })
-        .then(async (user) => {
+        .then(async user => {
           //Find conversations
           //   let conversations = await Conversation.find({
           //     participants: { $in: user._id }
@@ -35,13 +35,13 @@ exports = module.exports = (io) => {
           //   socket.conversations = conversations;
           next();
         })
-        .catch((err) => next(err));
+        .catch(err => next(err));
     });
   });
   let clients = [];
   // This is what the socket.io syntax is like, we will work this later
 
-  io.on("connection", (socket) => {
+  io.on("connection", socket => {
     const { user } = socket;
     clients.push(user.fname);
     console.log(clients);
@@ -49,12 +49,12 @@ exports = module.exports = (io) => {
     //Joining my user group room
     socket.join(user.role);
 
-    // socket.to(user._id).emit("notification2", {
-    //   title: "A new notification from server",
-    //   description: "1 hour ago",
-    //   type: "new-report",
-    //   createdAt: new Date()
-    // });
+    socket.to(user._id).emit("notification2", {
+      title: "A new notification from server",
+      description: "1 hour ago",
+      type: "new-report",
+      createdAt: new Date()
+    });
 
     // socket.conversations.map(each => {
     //   socket.join(each._id);

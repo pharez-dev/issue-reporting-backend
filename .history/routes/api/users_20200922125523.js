@@ -11,6 +11,12 @@ const Issue = mongoose.model("Issues");
 const path = require("path");
 
 /**
+ *Endpoint for policy ...*
+ **/
+router.get("/policy", (req, res) => {
+  res.render("policy.ejs");
+});
+/**
  *Endpoint for loging in, requires checking if user is active ...*
  **/
 router.post("/login", (req, res, next) => {
@@ -228,9 +234,15 @@ router.post(
 router.post(
   "/allIssues",
   passport.authenticate("jwt", { session: false }),
-  (req, res, next) => {
+  async (req, res, next) => {
     const { body } = req;
     //console.log("[body of all ]", body);
+    let IssuesReported = await Issue.find().countDocuments();
+    let IssuesResovled = await Issue.find({
+      $or: [{ status: "resolved" }, { status: "closed" }],
+    }).countDocuments();
+
+    console.log(IssuesReported, IssuesResovled);
     let search = {};
     let filter = {};
     let sort = { createdAt: -1 };
@@ -263,12 +275,12 @@ router.post(
     //Searching
     if (body.query) {
       body.query = kebab(body.query);
-      ft = {
+      search = {
         $or: [
           { type: { $regex: body.query, $options: "i" } },
-          { county: { $regex: body.query, $options: "i" } },
+          { status: { $regex: body.query, $options: "i" } },
 
-          { sub_county: { $regex: body.query, $options: "i" } },
+          { description: { $regex: body.query, $options: "i" } },
         ],
       };
     }
@@ -293,7 +305,13 @@ router.post(
         });
         //console.log(data);
         results.docs = data.length;
-        res.json({ success: true, issues: data, meta: results });
+        res.json({
+          success: true,
+          issues: data,
+          meta: results,
+          IssuesReported,
+          IssuesResovled,
+        });
       })
       .catch((err) => {
         console.log(err);
@@ -301,6 +319,153 @@ router.post(
       });
   }
 );
+/**
+ *Endpoint for resolving responder ids  ...*
+ **/
+router.post(
+  "/responses",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    let { response } = req.body;
+    try {
+      let ids = response.map((each) => mongoose.Types.ObjectId(each.by));
+
+      let userInfo = await User.find(
+        { _id: { $in: ids } },
+        { fname: 1, lname: 1, role: 1 }
+      );
+      response = response.map((each) => {
+        userInfo.map((info) => {
+          if (info._id == each.by)
+            each.by = info.fname + " " + info.lname + "- Sub County Admin ";
+        });
+        return each;
+      });
+      return res.json({ success: true, response });
+    } catch (err) {
+      return res.json({ success: false, message: err.message });
+    }
+  }
+);
+
+/**
+ *Endpoint for updating user profile*
+ **/
+router.post(
+  "/update_profile",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { body } = req;
+    console.log("[update body]", body);
+    const { fname, lname, email, phoneNumber } = req.body;
+    try {
+      await User.findOne({ email });
+
+      User.findOneAndUpdate(
+        { _id: mongoose.Types.ObjectId(req.user._id) },
+        { name, email, phoneNumber, phoneCode },
+        { new: true }
+      ).then((data) => {
+        const user = parseUser(data._doc);
+        jwt.sign(
+          user,
+          "secret",
+          {
+            expiresIn: 60 * 30 * 100000,
+          },
+          (err, token) => {
+            if (err) console.error("There is some error in token", err);
+            else {
+              res.json({
+                success: true,
+                token: `Bearer ${token}`,
+                user,
+              });
+            }
+          }
+        );
+      });
+    } catch (e) {
+      console.log(e);
+      res.status(200).json({
+        success: false,
+        message: e.message,
+      });
+    }
+  }
+);
+/**
+ *Endpoint for changing password*
+ **/
+router.post(
+  "/update_password",
+  passport.authenticate("jwt", { session: false }),
+  (req, res, next) => {
+    const { body } = req;
+    const { pushToken } = body;
+    const { oldpassword, newpassword } = req.body;
+    console.log("[body]", body);
+    //return;
+
+    User.findOne({ _id: mongoose.Types.ObjectId(req.user._id) }).then(
+      (user) => {
+        if (!user) {
+          return res.status(200).json({
+            success: false,
+            message: "An error occurred in changing your password!",
+          });
+        }
+        bcrypt.compare(oldpassword, user.password).then(async (isMatch) => {
+          if (isMatch) {
+            //hash new password
+            bcrypt.genSalt(10, (err, salt) => {
+              if (err) console.error("There was an error", err);
+              else {
+                bcrypt.hash(newpassword, salt, (err, hash) => {
+                  if (err) console.error("There was an error", err);
+                  else {
+                    user.password = hash;
+                    user.save().then(async (user) => {
+                      // user = user.toObject();
+
+                      res.json({
+                        success: true,
+
+                        message: "Your password was udated successfully",
+                      });
+                    });
+                  }
+                });
+              }
+            });
+            // jwt.sign(
+            //   payload,
+            //   "secret",
+            //   {
+            //     expiresIn: 60 * 30 * 100000,
+            //   },
+            //   (err, token) => {
+            //     if (err) console.error("There is some error in token", err);
+            //     else {
+            //       res.json({
+            //         success: true,
+            //         token: `Bearer ${token}`,
+            //         message: "Login successful, Taking you to Home!",
+            //       });
+            //     }
+            //   }
+            // );
+          } else {
+            return res
+              .status(200)
+              .json({ success: false, message: "Incorrect current password!" });
+          }
+        });
+      }
+    );
+  }
+);
+
 const parseUser = (user) => {
   if (user.role == "admin") {
     delete user.students;

@@ -217,19 +217,12 @@ router.post(
     const { body } = req;
     const { user } = req;
     console.log("[body of updatenotifications]", body);
-    let newUpdated = await Notification.findOneAndUpdate(
-      { _id: body.record },
-      { opened: true },
-      { returnNewDocument: true }
-    );
-    console.log(newUpdated);
+    await Notification.findByIdAndUpdate(body.record, { opened: true });
     let newNotifications = await Notification.find({
       to: user.role,
       opened: false,
     }).sort({ createdAt: -1 });
-    //emit new
-    req.io.to(req.user._id).emit("replace-notifications", newNotifications);
-    res.json({});
+
     //   .then(data => {
     //     res.json({ success: true, data });
     //   })

@@ -217,12 +217,7 @@ router.post(
     const { body } = req;
     const { user } = req;
     console.log("[body of updatenotifications]", body);
-    let newUpdated = await Notification.findOneAndUpdate(
-      { _id: body.record },
-      { opened: true },
-      { returnNewDocument: true }
-    );
-    console.log(newUpdated);
+    await Notification.findAndModify({ _id: body.record }, { opened: true });
     let newNotifications = await Notification.find({
       to: user.role,
       opened: false,
