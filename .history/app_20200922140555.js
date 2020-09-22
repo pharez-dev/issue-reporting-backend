@@ -151,3 +151,8 @@ if (isProduction) {
     `ISSUE REPORTING SERVER IS RUNNING!!!, on  ip ${IP} port :${PORT}`
   );
 }
+server.listen(PORT, IP, () =>
+  console.log(
+    `ISSUE REPORTING SERVER IS RUNNING!!!, on  ip ${IP} port :${PORT}`
+  )
+);
